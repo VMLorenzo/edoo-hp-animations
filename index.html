@@ -1,0 +1,1777 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Animace kroků na HP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Plus+Jakarta+Sans:wght@700&family=Readex+Pro:wght@400;500;700&display=swap">
+<style>
+/* ══════════════════════════════════════════════════════════════════════
+   Animace splněných kroků denní cesty na HP (LimonLingo)
+   Zdroj obrazovek: Figma Mobile-app-design › sekce „Home“ (13860:84010),
+   stavy Domů 0/3 → 3/3 a Domů – nová gramatická karta.
+   Rozměry, barvy a cesty jsou z Figmy. Pohyb je návrh — ve Figmě není.
+   ══════════════════════════════════════════════════════════════════════ */
+:root{
+  color-scheme:dark;
+  /* Edoo DS · Schemes (light) */
+  --surface:#F9F9F9; --lowest:#FFFFFF; --cont:#EDEDED;
+  --on:#353535; --on-var:#767676; --outline:#7C7C7C; --outline-var:#E1E1E1;
+  --primary:#FFD635; --primary-c:#FFF0A0;
+  --secondary:#65AE39; --secondary-c:#D7EDC3; --on-secondary-c:#0A2800;
+  --tertiary:#608EDC; --error:#FE4A4E;
+  --streak:#FF6904; --streak-num:#FF6600;
+
+  --sh-card:0 1px 3px rgba(0,0,0,.05),0 6px 24px rgba(0,0,0,.07);
+  --sh-bar:0 8px 40px rgba(0,0,0,.12);
+
+  --f-head:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --f-body:'Readex Pro',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --f-num:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --f-ios:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;
+
+  /* scéna okolo telefonu */
+  --stage-1:#3A3D42; --stage-2:#222427; --stage-3:#141517;
+  --stage-ink:#E8E8E8; --stage-dim:#A3A3A3; --stage-line:rgba(255,255,255,.14); --stage-chip:rgba(255,255,255,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  background:radial-gradient(120% 90% at 50% 0%,var(--stage-1) 0%,var(--stage-2) 55%,var(--stage-3) 100%) fixed,var(--stage-3);
+  color:var(--stage-ink);font-family:var(--f-body);
+  padding-block:24px 48px;padding-inline:16px;-webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;text-align:inherit;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+p,h1,h2,h3{margin:0}
+svg{display:block;flex:none}
+
+/* ── scéna ─────────────────────────────────────────────────────────── */
+.stage{max-width:1180px;margin:0 auto;display:flex;flex-wrap:wrap;gap:28px 44px;justify-content:center;align-items:flex-start}
+.left{flex:none;display:flex;flex-direction:column;align-items:center;gap:14px;position:sticky;top:24px}
+.fit{position:relative;width:400px;height:908px}
+.signals{display:flex;gap:10px;font-size:12px;line-height:16px;color:var(--stage-dim)}
+.sig{display:flex;align-items:center;gap:8px;padding:6px 12px 6px 10px;border-radius:100px;border:1px solid var(--stage-line);background:var(--stage-chip);min-width:150px;transition:border-color .3s linear,background-color .3s linear}
+.sig i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.18);transition:background-color .3s linear,box-shadow .3s linear}
+.sig b{font-weight:500;color:var(--stage-ink)}
+.sig.on{border-color:rgba(255,214,53,.6);background:rgba(255,214,53,.08);transition:none}
+.sig.on i{background:var(--primary);box-shadow:0 0 0 4px rgba(255,214,53,.22);transition:none}
+
+.panel{flex:1 1 420px;max-width:640px;min-width:0;display:flex;flex-direction:column;gap:22px;padding-top:4px}
+.panel h1{font:700 24px/30px var(--f-head);text-wrap:balance}
+.panel .lead{margin-top:8px;font-size:14px;line-height:21px;color:var(--stage-dim);text-wrap:pretty}
+.panel h2{font:500 11px/16px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--stage-dim);margin-bottom:10px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.step{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;border:1px solid var(--stage-line);background:var(--stage-chip);font-size:13px;line-height:18px;transition:border-color .15s linear,background-color .15s linear}
+.step b{font:700 12px/16px var(--f-num);color:var(--primary)}
+.step small{font-size:11.5px;line-height:15px;color:var(--stage-dim)}
+.step:hover{border-color:rgba(255,255,255,.32)}
+.step[aria-pressed="true"]{border-color:var(--primary);background:rgba(255,214,53,.08)}
+.vars{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.vars button{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;border:1px solid var(--stage-line);background:var(--stage-chip);font-size:13px;line-height:18px;transition:border-color .15s linear,background-color .15s linear}
+.vars button b{font-weight:500}
+.vars button small{font-size:11.5px;line-height:15px;color:var(--stage-dim)}
+.vars button:hover{border-color:rgba(255,255,255,.32)}
+.vars button[aria-pressed="true"]{border-color:var(--secondary);background:rgba(101,174,57,.12)}
+.analysis h4{font:700 14px/20px var(--f-head);margin:14px 0 6px}
+.analysis h4:first-child{margin-top:0}
+.analysis .notes{margin-top:8px}
+table.cmp td.cur,table.cmp th.cur{background:rgba(101,174,57,.12);color:var(--stage-ink)}
+table.cmp th{white-space:nowrap}
+table.cmp tr.sum td{font-size:11.5px;color:var(--stage-dim)}
+table.cmp tr.sum td.cur{color:var(--stage-ink)}
+.row{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.btn{padding:8px 14px;border-radius:100px;border:1px solid var(--stage-line);background:var(--stage-chip);font-size:13px;line-height:18px}
+.btn:hover{border-color:rgba(255,255,255,.32)}
+.btn.primary{background:var(--stage-ink);color:var(--stage-3);border-color:var(--stage-ink);font-weight:500}
+.seg{display:flex;padding:3px;border-radius:100px;border:1px solid var(--stage-line);background:var(--stage-chip)}
+.seg button{padding:5px 11px;border-radius:100px;font-size:12.5px;line-height:18px;color:var(--stage-dim)}
+.seg button[aria-pressed="true"]{background:var(--stage-ink);color:var(--stage-3);font-weight:500}
+.tgl{display:flex;align-items:center;gap:8px;font-size:13px;line-height:18px;color:var(--stage-dim);cursor:pointer;user-select:none}
+.tgl input{appearance:none;width:30px;height:18px;border-radius:100px;background:rgba(255,255,255,.18);position:relative;margin:0;cursor:pointer;transition:background-color .15s linear}
+.tgl input::after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--stage-ink);transition:transform .2s cubic-bezier(.2,0,0,1)}
+.tgl input:checked{background:var(--secondary)}
+.tgl input:checked::after{transform:translateX(12px)}
+.tgl input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+
+.card{border:1px solid var(--stage-line);background:var(--stage-chip);border-radius:16px;padding:16px}
+.card h3{font:700 16px/22px var(--f-head);margin-bottom:4px}
+.card .sub{font-size:13px;line-height:19px;color:var(--stage-dim);text-wrap:pretty}
+
+/* časová osa */
+.tl{margin-top:14px;font-size:11px;line-height:14px}
+.tl-ruler,.tl-row{display:grid;grid-template-columns:96px 1fr;align-items:center}
+.tl-ruler .ax{position:relative;height:16px;color:var(--stage-dim)}
+.tl-ruler .ax span{position:absolute;top:0;transform:translateX(-50%);font-variant-numeric:tabular-nums}
+.tl-ruler .ax span:first-child{transform:none}
+.tl-row{min-height:22px}
+.tl-row>.lb{color:var(--stage-dim);padding-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-row>.tr{position:relative;height:22px;border-top:1px solid rgba(255,255,255,.06)}
+.tl-body{position:relative}
+.bar{position:absolute;top:5px;height:12px;border-radius:4px;min-width:3px;background:rgba(160,180,220,.55)}
+.bar.spring{background:rgba(255,214,53,.75)}
+.bar.fx{background:rgba(101,174,57,.75)}
+.bar:hover{outline:1px solid #fff;z-index:2}
+.ev{position:absolute;top:5px;width:11px;height:11px;margin-left:-5.5px;transform:rotate(45deg);border-radius:2px;background:#fff}
+.ev.snd{background:var(--tertiary);border-radius:50%;transform:none}
+.playhead{position:absolute;top:-16px;bottom:0;width:1px;background:var(--primary);pointer-events:none;left:96px}
+.playhead::before{content:"";position:absolute;top:0;left:-4px;width:9px;height:9px;border-radius:50%;background:var(--primary)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:11.5px;line-height:16px;color:var(--stage-dim)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:14px;height:8px;border-radius:3px;display:inline-block}
+.tl-tip{margin-top:8px;min-height:16px;font-size:12px;line-height:16px;color:var(--stage-ink)}
+
+.beats{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:7px;font-size:13px;line-height:19px}
+.beats li{display:grid;grid-template-columns:56px 1fr;gap:8px}
+.beats .t{font:700 11.5px/19px var(--f-num);color:var(--primary);font-variant-numeric:tabular-nums}
+.beats .why{color:var(--stage-dim)}
+
+table.tok{width:100%;border-collapse:collapse;font-size:12.5px;line-height:17px;margin-top:6px}
+table.tok th,table.tok td{text-align:left;padding:7px 8px 7px 0;border-top:1px solid rgba(255,255,255,.08);vertical-align:top}
+table.tok th{font-weight:500;color:var(--stage-dim);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+table.tok code{font:500 11.5px/16px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--stage-ink);background:rgba(255,255,255,.06);padding:1px 5px;border-radius:5px;white-space:nowrap}
+.notes{margin:0;padding-left:18px;font-size:13px;line-height:20px;color:var(--stage-dim)}
+.notes li+li{margin-top:7px}
+.notes b{color:var(--stage-ink);font-weight:500}
+.panel a{color:var(--stage-ink)}
+details.card>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;font:700 16px/22px var(--f-head)}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::after{content:"+";font:400 20px/1 var(--f-body);color:var(--stage-dim)}
+details.card[open]>summary::after{content:"–"}
+details.card[open]>summary{margin-bottom:10px}
+
+/* ── telefon ───────────────────────────────────────────────────────── */
+.phone{position:absolute;top:0;left:0;width:400px;height:908px;overflow:hidden;border-radius:40px;background:var(--surface);color:var(--on);font-family:var(--f-body);transform-origin:0 0;isolation:isolate;box-shadow:0 24px 70px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.05);cursor:default}
+.phone.playing{cursor:pointer}
+.scr{position:absolute;inset:0}
+.scr>*{position:absolute}
+
+.t-hl-s{font:700 24px/32px var(--f-head)}
+.t-tl-m{font:700 16px/24px var(--f-body);letter-spacing:.15px}
+.t-bm{font:400 14px/20px var(--f-body)}
+.c-var{color:var(--on-var)}
+
+/* status bar iPhone */
+.sb{left:0;top:0;width:400px;height:60px;padding-top:21px;display:flex;align-items:flex-start}
+.sb-time{flex:1;display:flex;justify-content:center;padding:0 6px 0 16px;font:590 17px/22px var(--f-ios)}
+.sb-gap{flex:0 0 124px}
+.sb-lv{flex:1;display:flex;gap:7px;align-items:center;justify-content:center;padding:0 16px 0 6px;height:22px}
+
+/* hlavička */
+.chip{display:flex;align-items:center;padding:6px 7px;border-radius:1000px;background:var(--lowest);box-shadow:var(--sh-card)}
+.lang{left:16px;top:76px;width:93px;gap:6px}
+.hp-right{right:16px;top:72px;display:flex;gap:12px;align-items:center}
+.streak{gap:8px}
+.streak .grp{display:flex;align-items:center}
+.streak .sep{width:1px;height:24px;border-radius:99px;background:var(--outline-var)}
+.num{font:700 14px/19.6px var(--f-num)}
+.fire{position:relative;width:24px;height:24px;transform-origin:50% 88%}
+.fire svg{position:absolute;inset:0}
+.fire .lit{opacity:0}
+.icon-btn{display:flex;padding:4px;border-radius:1000px;background:var(--lowest);box-shadow:var(--sh-card)}
+.icon-btn>span{width:36px;height:36px;display:grid;place-items:center}
+.greet{left:16px;top:144px;width:368px}
+
+/* denní přehled */
+.daily{left:16px;top:192px;width:368px;height:91.875px;padding:12px;display:flex;gap:12px;align-items:center;border-radius:28px;background:var(--lowest);box-shadow:0 1px 1.5px rgba(0,0,0,.05),0 6px 12px rgba(0,0,0,.07)}
+.ring{position:relative;flex:none;width:67.875px;height:67.875px}
+.ring>svg{position:absolute;inset:0;overflow:visible}
+.ring .arc{filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.05)) drop-shadow(0 6px 12px rgba(0,0,0,.07))}
+.ring .n{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .n b{display:flex;font:700 16px/19.2px var(--f-body);letter-spacing:-.5px}
+.ring .n small{font:500 8.484px/1.2 var(--f-body);letter-spacing:.2545px;text-transform:uppercase;color:var(--on-var)}
+.roll{display:inline-flex;overflow:hidden;vertical-align:top}
+.roll>span{display:flex;flex-direction:column}
+.ring .roll{height:19.2px}
+.streak .roll{height:19.6px}
+.dtxt{position:relative;width:257px;display:grid}
+.dtxt>.ly{grid-area:1/1;display:flex;flex-direction:column;justify-content:center}
+.when{display:flex;gap:6px;align-items:center;color:var(--tertiary)}
+.when b{font:700 14px/20px var(--f-body)}
+
+/* denní cesta */
+.dnes{left:0;width:400px;top:315.875px;text-align:center;font:400 12px/18.2px var(--f-body);text-transform:uppercase;color:#6F6F71}
+.streakbar{left:15.59px;top:315.875px;width:42px;height:269px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:8.5px;border-radius:28px;background:var(--lowest);box-shadow:0 1px 1.5px rgba(0,0,0,.05),0 6px 12px rgba(0,0,0,.07)}
+.sday{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:1px;height:43px;font:500 12px/16px var(--f-body);letter-spacing:.5px}
+.sday.today{color:var(--streak)}
+.tday{position:relative;width:26px;height:26px}
+.tday>*{position:absolute;inset:0}
+.tday .lit{opacity:0}
+.seg-path{overflow:visible;pointer-events:none}
+
+.node{position:absolute;width:96px;height:96px;margin:-48px 0 0 -48px}
+.node>*,.node .bob>*{position:absolute}
+.hop,.bob{position:absolute;inset:0}
+.halo{inset:0;border-radius:50%;box-shadow:inset 0 0 0 3.36px rgba(255,214,53,.4);opacity:0}
+.core{inset:8px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--surface);box-shadow:inset 0 0 0 2px var(--outline-var);color:var(--outline)}
+.core .fill{position:absolute;inset:0;border-radius:50%;transform:scale(0)}
+.core .ico{position:relative;display:grid;place-items:center}
+.ripple{inset:0;border-radius:50%;border:2.5px solid var(--primary);opacity:0;pointer-events:none}
+.coinw{position:absolute;inset:8px}
+.coin3d{position:absolute;inset:0;transform-style:preserve-3d}
+.coin3d .f{position:absolute;inset:0;border-radius:50%;display:grid;place-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.coin3d .front{background:var(--surface);box-shadow:inset 0 0 0 2px var(--outline-var);color:var(--outline)}
+.coin3d .back{background:var(--primary);color:var(--on);transform:rotateY(180deg)}
+.coin3d .edge{position:absolute;left:50%;top:0;width:6px;height:100%;margin-left:-3px;border-radius:3px;background:#D9D9D9;transform:rotateY(90deg)}
+.puff{position:absolute;left:0;top:0;border-radius:50%;pointer-events:none;opacity:0}
+.nshadow{left:18px;top:76px;width:60px;height:16px;border-radius:50%;background:#000;opacity:0;pointer-events:none} /* plochý stín, jako pod plamenem na kartě série */
+.node.is-active .halo{opacity:1}
+.node.is-active .core{background:var(--primary);box-shadow:none;color:var(--on)}
+.node.is-done .core{background:var(--secondary);box-shadow:none;color:#fff}
+
+/* inline zpráva + tab bar */
+.inline{left:21px;top:759px;width:358px;padding:12px;display:flex;gap:16px;align-items:center;border-radius:16px;background:var(--secondary-c);color:var(--on-secondary-c);opacity:0;visibility:hidden}
+.inline.on{opacity:1;visibility:visible}
+.inline p{flex:1;font:400 12px/16px var(--f-body);text-decoration:underline;text-underline-position:from-font}
+.inline .l{flex:1;display:flex;gap:8px;align-items:center}
+.tabbar{left:25px;top:827px;width:350px;height:56px;padding:0 2px;display:flex;align-items:center;justify-content:center;border-radius:296px;background:var(--lowest);box-shadow:var(--sh-bar)}
+.tab{position:relative;isolation:isolate;flex:none;width:92.5px;height:56px;margin-right:-8px;padding:6px 8px 7px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5px;color:var(--on-var);font:500 11px/14px var(--f-body);text-align:center}
+.tab:last-child{margin-right:0}
+.tab.is-active{color:var(--on)}
+.tab.is-active::before{content:"";position:absolute;inset:0 -2.25px;z-index:-1;border-radius:100px;background:var(--cont)}
+.badge{position:absolute;left:51.25px;top:7.95px;min-width:16px;max-width:34px;height:14px;padding:0 4px;border-radius:100px;background:var(--error);color:#fff;font:500 11px/14px var(--f-body);text-align:center;transform:scale(0)}
+.badge.on{transform:none}
+
+/* vrstva částic */
+.fx{position:absolute;inset:0;pointer-events:none;z-index:20;overflow:hidden}
+.pt{position:absolute;left:0;top:0;will-change:transform,opacity}
+.fx svg.burst{position:absolute;overflow:visible}
+
+/* obrazovka série — Figma „Streak“ (13994:95997), po splnění celé denní cesty */
+.strk{position:absolute;inset:0;z-index:29;background:var(--surface);display:none;overflow:hidden}
+.strk.on{display:block}
+.strk.sheet{top:48px;border-radius:28px 28px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.12)}
+.strk.sheet .sb{display:none}
+.strk.sheet>*:not(.sb):not(.rays){margin-top:-16px}
+.kscrim{position:absolute;inset:0;z-index:28;background:rgba(0,0,0,.32);display:none}
+.kscrim.on{display:block}
+.strk>*{position:absolute}
+.strk .rays{left:0;top:0;width:400px;height:908px;opacity:0;transform-origin:200px 290px}
+.kshadow{left:149.19px;top:224.7px;width:101.63px;height:132px;transform-origin:50.5px 116px}
+.kflame{left:149.19px;top:224.7px;width:101.63px;height:132px;transform-origin:50% 88%}
+.knum{left:0;width:400px;top:390.7px;display:flex;flex-direction:column;align-items:center;gap:10px;font-family:var(--f-num);font-weight:800;letter-spacing:.5px;color:#B8B8B8}
+.knum .roll{height:48px;font-size:60px;line-height:48px}
+.knum .lbl{font-size:22px;line-height:17.6px;white-space:nowrap}
+.kcap{left:21px;top:680px;width:208px;height:52px;border-radius:100px;background:rgba(255,105,4,.2);overflow:hidden}
+.kcap i{position:absolute;top:0;left:0;width:70px;height:52px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0));opacity:0}
+.kday{top:656px;width:52px;margin-left:-26px;text-align:center;font:400 14px/20px var(--f-body);color:var(--on)}
+.ktok{width:40px;height:40px;top:686px;margin-left:-20px}
+.kemp{width:32px;height:32px;top:691px;margin-left:-16px;border-radius:50%;background:#EDEDED}
+.strk #kPaT{opacity:0}
+.kcta{left:16px;top:785px;width:368px;height:56px;border-radius:100px;background:#FF6904;color:#fff;font:500 16px/24px var(--f-body);display:grid;place-items:center;opacity:0}
+.fly{position:absolute;inset:0;z-index:40;pointer-events:none;overflow:hidden}
+.fly>svg{position:absolute;overflow:visible}
+
+/* přechodová success obrazovka — Figma „Přechodové success obrazovky“ (13994:58748), přepoužitá komponenta */
+.succ{position:absolute;inset:0;z-index:30;background:var(--surface);display:none;overflow:hidden}
+.succ.on{display:block}
+.succ>*{position:absolute}
+.succ .rays{left:0;top:0;width:400px;height:908px;transform-origin:200px 280.5px}
+.succ .dots{left:178px;top:284px;width:43.09px;height:17.23px}
+.succ .dots i{position:absolute;width:9.66px;height:9.66px;border-radius:50%;background:var(--secondary)}
+.succ .dots i:nth-child(1){left:0;top:0}
+.succ .dots i:nth-child(2){left:16.71px;top:2.58px}
+.succ .dots i:nth-child(3){left:33.43px;top:7.57px}
+.succ .sbadge{left:130px;top:211px;width:139px;height:139px}
+.succ .head{left:16px;top:560px;width:368px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.succ .head h2{margin:0;font:700 32px/40px var(--f-head);color:var(--on)}
+.succ .head p{margin:0;font:400 16px/24px var(--f-body);color:var(--on-var);text-wrap:pretty}
+.cap{font-size:12px;line-height:16px;color:var(--stage-dim);text-align:center;max-width:400px}
+
+@media (max-width:900px){.left{position:static}}
+@media (max-width:560px){.vars{grid-template-columns:1fr}.steps{grid-template-columns:repeat(2,1fr)}.signals{flex-wrap:wrap;justify-content:center}.sig{min-width:0}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="i-battery" viewBox="0 0 27.328 13" fill="none"><g> <rect opacity="0.35" x="0.5" y="0.5" width="24" height="12" rx="3.8" stroke="#353535"/> <path opacity="0.4" d="M26 4.78113V8.8566C26.8047 8.51143 27.328 7.70847 27.328 6.81886C27.328 5.92926 26.8047 5.1263 26 4.78113" fill="#353535"/> <rect x="2" y="2" width="21" height="9" rx="2.5" fill="#353535"/> </g></symbol><symbol id="i-cell" viewBox="0 0 19.2 12.2264" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M19.2 1.14623C19.2 0.513183 18.7224 0 18.1333 0H17.0667C16.4776 0 16 0.513183 16 1.14623V11.0802C16 11.7132 16.4776 12.2264 17.0667 12.2264H18.1333C18.7224 12.2264 19.2 11.7132 19.2 11.0802V1.14623ZM11.7659 2.44528H12.8326C13.4217 2.44528 13.8992 2.97078 13.8992 3.61902V11.0527C13.8992 11.7009 13.4217 12.2264 12.8326 12.2264H11.7659C11.1768 12.2264 10.6992 11.7009 10.6992 11.0527V3.61902C10.6992 2.97078 11.1768 2.44528 11.7659 2.44528ZM7.43411 5.09433H6.36745C5.77834 5.09433 5.30078 5.62652 5.30078 6.28301V11.0377C5.30078 11.6942 5.77834 12.2264 6.36745 12.2264H7.43411C8.02322 12.2264 8.50078 11.6942 8.50078 11.0377V6.28301C8.50078 5.62652 8.02322 5.09433 7.43411 5.09433ZM2.13333 7.53962H1.06667C0.477563 7.53962 0 8.06421 0 8.71132V11.0547C0 11.7018 0.477563 12.2264 1.06667 12.2264H2.13333C2.72244 12.2264 3.2 11.7018 3.2 11.0547V8.71132C3.2 8.06421 2.72244 7.53962 2.13333 7.53962Z" fill="#353535"/></symbol><symbol id="i-close-x" viewBox="0 0 24 24" fill="none"><g> <path d="M17.4 6.6L6.6 17.4M6.6 6.6L17.4 17.4" stroke="#353535" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/> </g></symbol><symbol id="i-fire" viewBox="0 0 24 24" fill="none"><g> <path d="M9.68929 3.05045C9.96786 2.78974 10.4 2.79331 10.6786 3.05402C11.6643 3.97902 12.5893 4.97545 13.4536 6.05402C13.8464 5.53974 14.2929 4.97902 14.775 4.52188C15.0571 4.25759 15.4929 4.25759 15.775 4.52545C17.0107 5.70402 18.0571 7.26117 18.7929 8.73974C19.5179 10.1969 20 11.6862 20 12.7362C20 17.2933 16.4357 21.1433 12 21.1433C7.51429 21.1433 4 17.2897 4 12.7326C4 11.3612 4.63571 9.68617 5.62143 8.02902C6.61786 6.34688 8.025 4.59331 9.68929 3.05045ZM12.0607 17.7147C12.9643 17.7147 13.7643 17.4647 14.5179 16.9647C16.0214 15.9147 16.425 13.8147 15.5214 12.1647C15.3607 11.8433 14.95 11.8219 14.7179 12.0933L13.8179 13.1397C13.5821 13.4112 13.1571 13.404 12.9357 13.1219C12.3464 12.3719 11.2929 11.0326 10.6929 10.2719C10.4679 9.98617 10.0393 9.98259 9.81071 10.2683C8.60357 11.7862 7.99643 12.7433 7.99643 13.8183C8 16.2647 9.80714 17.7147 12.0607 17.7147Z" fill="#767676"/> </g></symbol><symbol id="i-flag-uk" viewBox="0 0 24 24" fill="none"><g clip-path="url(#flag-uk-clip0_0_256)"> <path d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24Z" fill="#F0F0F0"/> <g> <path d="M2.48062 4.69416C1.53802 5.92055 0.82725 7.33406 0.413391 8.86964H6.65611L2.48062 4.69416Z" fill="#0052B4"/> <path d="M23.5866 8.86964C23.1727 7.33411 22.4619 5.92059 21.5194 4.6942L17.344 8.86964H23.5866Z" fill="#0052B4"/> <path d="M0.413391 15.1305C0.827297 16.666 1.53806 18.0795 2.48062 19.3059L6.65597 15.1305H0.413391Z" fill="#0052B4"/> <path d="M19.3058 2.48067C18.0795 1.53806 16.666 0.827297 15.1304 0.413391V6.65606L19.3058 2.48067Z" fill="#0052B4"/> <path d="M4.69416 21.5193C5.92055 22.4619 7.33406 23.1727 8.86959 23.5866V17.344L4.69416 21.5193Z" fill="#0052B4"/> <path d="M8.86955 0.413391C7.33402 0.827297 5.9205 1.53806 4.69416 2.48062L8.86955 6.65602V0.413391Z" fill="#0052B4"/> <path d="M15.1305 23.5866C16.666 23.1727 18.0795 22.4619 19.3058 21.5194L15.1305 17.344V23.5866Z" fill="#0052B4"/> <path d="M17.344 15.1305L21.5194 19.3059C22.4619 18.0796 23.1727 16.666 23.5866 15.1305H17.344Z" fill="#0052B4"/> </g> <g> <path d="M23.8984 10.4348H13.5653H13.5652V0.101578C13.0529 0.034875 12.5305 0 12 0C11.4694 0 10.9471 0.034875 10.4348 0.101578V10.4347V10.4348H0.101578C0.034875 10.9471 0 11.4695 0 12C0 12.5306 0.034875 13.0529 0.101578 13.5652H10.4347H10.4348V23.8984C10.9471 23.9651 11.4694 24 12 24C12.5305 24 13.0529 23.9652 13.5652 23.8984V13.5653V13.5652H23.8984C23.9651 13.0529 24 12.5306 24 12C24 11.4695 23.9651 10.9471 23.8984 10.4348V10.4348Z" fill="#D80027"/> <path d="M15.1305 15.1305L20.4853 20.4853C20.7315 20.2391 20.9665 19.9817 21.1906 19.7149L16.6062 15.1305H15.1305V15.1305Z" fill="#D80027"/> <path d="M8.86955 15.1305H8.86945L3.51469 20.4853C3.76088 20.7315 4.01827 20.9665 4.28508 21.1906L8.86955 16.6061V15.1305Z" fill="#D80027"/> <path d="M8.86955 8.86964V8.86955L3.51473 3.51469C3.26845 3.76088 3.03352 4.01827 2.80936 4.28508L7.39387 8.86959H8.86955V8.86964Z" fill="#D80027"/> <path d="M15.1305 8.86964L20.4853 3.51473C20.2391 3.26845 19.9817 3.03352 19.7149 2.80941L15.1305 7.39392V8.86964Z" fill="#D80027"/> </g> </g> <defs> <clipPath id="flag-uk-clip0_0_256"> <rect width="24" height="24" fill="white"/> </clipPath> </defs></symbol><symbol id="i-icefire" viewBox="0 0 24 24" fill="none"><g> <path d="M9.68945 2.39318C9.96798 2.13361 10.4001 2.13664 10.6787 2.39611C11.5509 3.21119 12.3759 4.08258 13.1531 5.01657C13.3079 5.20259 13.5956 5.19899 13.7461 5.00945C14.0634 4.60978 14.409 4.20395 14.7754 3.85803C15.0575 3.59499 15.4933 3.59525 15.7754 3.86193C17.011 5.0355 18.0573 6.58597 18.793 8.05822C19.5179 9.50907 19.9999 10.9921 20 12.0377C20 13.9809 19.3446 15.7938 18.249 17.233L15.7275 21.3121C15.6594 21.4224 15.4919 21.3996 15.4561 21.275L15.1437 20.1875C15.0815 19.9709 14.8433 19.8591 14.6319 19.9373C14.3585 20.0386 14.0784 20.1248 13.7921 20.1944C13.6518 20.2286 13.5401 20.3362 13.5065 20.4767L13.2705 21.4625C13.2339 21.6152 13.0161 21.6152 12.9795 21.4625L12.7935 20.6886C12.75 20.5079 12.5804 20.3877 12.3948 20.3978C12.3607 20.3997 12.3265 20.4013 12.2923 20.4027C12.122 20.4097 11.9733 20.5241 11.9308 20.6891L11.2695 23.2594C11.2309 23.4085 11.0191 23.4085 10.9805 23.2594L10.2473 20.4102C10.2129 20.2765 10.1074 20.1734 9.97406 20.1377C9.96889 20.1363 9.96373 20.1349 9.95858 20.1335C9.75371 20.0782 9.53726 20.192 9.47882 20.396L9.09082 21.7506C9.05523 21.874 8.89057 21.8979 8.82129 21.7897L6.41568 18.034C6.40226 18.0131 6.38678 17.9936 6.36957 17.9756C4.90051 16.4447 4.00004 14.3301 4 12.0348C4 10.6691 4.63536 9.00044 5.62109 7.35022C6.61751 5.67519 8.02525 3.92952 9.68945 2.39318ZM10.6934 9.58459C10.4684 9.30007 10.0391 9.29616 9.81055 9.58068C8.60347 11.0921 7.99609 12.0454 7.99609 13.1158C7.99968 15.5519 9.80709 16.9956 12.0605 16.9957C12.9641 16.9957 13.765 16.7466 14.5186 16.2487C16.0217 15.2029 16.4249 13.1123 15.5215 11.4694C15.3608 11.1493 14.9499 11.1278 14.7178 11.3981L13.8184 12.4401C13.5826 12.7104 13.157 12.7034 12.9355 12.4225C12.3463 11.6757 11.2934 10.3422 10.6934 9.58459Z" fill="#608EDC"/> </g></symbol><symbol id="i-path-big-icon" viewBox="0 0 39.3916 24" fill="none"><g> <g> <path d="M8.8 19.9998V15.8998L10.7 16.0998C11.2531 16.0691 11.7766 15.8398 12.1742 15.4539C12.5717 15.0681 12.8167 14.5518 12.864 13.9998V8.29983C12.8706 6.85918 12.3047 5.47489 11.2907 4.4515C10.2767 3.42812 8.89766 2.84946 7.457 2.84283C6.01634 2.8362 4.63206 3.40214 3.60867 4.41615C2.58529 5.43016 2.00663 6.80918 2 8.24983C2 11.0498 2.656 11.3038 3 12.7998C3.23248 13.7033 3.24243 14.6497 3.029 15.5578L2 19.9998M19.8 17.7998C21.2059 16.3938 21.9959 14.4871 21.9964 12.4989C21.997 10.5107 21.2081 8.60355 19.803 7.19678M17.0001 14.9999C17.3273 14.6728 17.5863 14.2841 17.7623 13.8562C17.9383 13.4283 18.0278 12.9698 18.0254 12.5072C18.0231 12.0445 17.9291 11.587 17.7488 11.1609C17.5685 10.7348 17.3055 10.3487 16.9751 10.0249" stroke="#353535" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> </g> <path d="M31.5914 20.1561V16.0561L29.6914 16.2561C29.1383 16.2253 28.6148 15.996 28.2172 15.6102C27.8197 15.2244 27.5747 14.708 27.5274 14.1561V8.45608C27.5208 7.01543 28.0867 5.63114 29.1007 4.60775C30.1147 3.58437 31.4937 3.00571 32.9344 2.99908C34.3751 2.99245 35.7593 3.55839 36.7827 4.5724C37.8061 5.58641 38.3848 6.96543 38.3914 8.40608C38.3914 11.2061 37.7354 11.4601 37.3914 12.9561C37.1589 13.8596 37.149 14.8059 37.3624 15.7141L38.3914 20.1561" stroke="#353535" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> </g></symbol><symbol id="i-path-book" viewBox="0 0 30 30" fill="none"><g> <path d="M15 9.375V25.125M15 9.375C15 8.18153 14.5259 7.03693 13.682 6.19302C12.8381 5.34911 11.6935 4.875 10.5 4.875H4.875C4.57663 4.875 4.29048 4.99353 4.0795 5.2045C3.86853 5.41548 3.75 5.70163 3.75 6V20.625C3.75 20.9234 3.86853 21.2095 4.0795 21.4205C4.29048 21.6315 4.57663 21.75 4.875 21.75H11.625C12.5201 21.75 13.3786 22.1056 14.0115 22.7385C14.6444 23.3714 15 24.2299 15 25.125M15 9.375C15 8.18153 15.4741 7.03693 16.318 6.19302C17.1619 5.34911 18.3065 4.875 19.5 4.875H25.125C25.4234 4.875 25.7095 4.99353 25.9205 5.2045C26.1315 5.41548 26.25 5.70163 26.25 6V20.625C26.25 20.9234 26.1315 21.2095 25.9205 21.4205C25.7095 21.6315 25.4234 21.75 25.125 21.75H18.375C17.4799 21.75 16.6214 22.1056 15.9885 22.7385C15.3556 23.3714 15 24.2299 15 25.125M19.5 15H21.75M19.5 10.5H21.75M8.25 15H10.5M8.25 10.5H10.5" stroke="#7C7C7C" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/> </g></symbol><symbol id="i-path-clipboard" viewBox="0 0 30 30" fill="none"><g> <path d="M18.75 2.5H11.25C10.5596 2.5 10 3.05964 10 3.75V6.25C10 6.94036 10.5596 7.5 11.25 7.5H18.75C19.4404 7.5 20 6.94036 20 6.25V3.75C20 3.05964 19.4404 2.5 18.75 2.5Z" stroke="#7C7C7C" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/> <path d="M20 5H22.5C23.163 5 23.7989 5.26339 24.2678 5.73223C24.7366 6.20107 25 6.83696 25 7.5V25C25 25.663 24.7366 26.2989 24.2678 26.7678C23.7989 27.2366 23.163 27.5 22.5 27.5H7.5C6.83696 27.5 6.20107 27.2366 5.73223 26.7678C5.26339 26.2989 5 25.663 5 25V7.5C5 6.83696 5.26339 6.20107 5.73223 5.73223C6.20107 5.26339 6.83696 5 7.5 5H10" stroke="#7C7C7C" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/> <path d="M10 13.75L14.4978 13.75" stroke="#7C7C7C" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/> <path d="M10 19.9815L11.1185 19.9814" stroke="#7C7C7C" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/> <path d="M16 20.6548L17.6414 21.875L21.4714 16.5874" stroke="#7C7C7C" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/> </g></symbol><symbol id="i-path-dumbbell" viewBox="0 0 30 30" fill="none"><g> <path d="M4.3122 25.6876L5.8872 24.1126M24.1122 5.88749L25.6872 4.31249M12.2997 17.7001L17.6997 12.3001M21.2952 15.864C21.7173 16.286 22.2897 16.5231 22.8865 16.5231C23.4834 16.5231 24.0558 16.286 24.4778 15.864C24.8999 15.442 25.137 14.8695 25.137 14.2727C25.137 13.6758 24.8999 13.1034 24.4778 12.6814L22.4888 10.6935C22.9109 11.1154 23.4832 11.3524 24.08 11.3522C24.3755 11.3522 24.6681 11.2939 24.941 11.1808C25.214 11.0677 25.462 10.9019 25.6709 10.6929C25.8798 10.484 26.0455 10.2359 26.1585 9.96288C26.2716 9.68987 26.3297 9.39727 26.3297 9.10179C26.3296 8.80631 26.2714 8.51373 26.1582 8.24076C26.0451 7.96779 25.8793 7.71978 25.6703 7.51088L22.4888 4.32938C22.067 3.90733 21.4947 3.67017 20.8979 3.67007C20.3012 3.66996 19.7288 3.90692 19.3068 4.32881C18.8847 4.75071 18.6476 5.32298 18.6475 5.91973C18.6474 6.51648 18.8843 7.08883 19.3062 7.51088L17.3183 5.52188C17.1094 5.3129 16.8613 5.14714 16.5882 5.03404C16.3152 4.92094 16.0226 4.86273 15.727 4.86273C15.4315 4.86273 15.1389 4.92094 14.8658 5.03404C14.5928 5.14714 14.3447 5.3129 14.1357 5.52188C13.9267 5.73085 13.761 5.97894 13.6479 6.25198C13.5348 6.52501 13.4766 6.81765 13.4766 7.11319C13.4766 7.40872 13.5348 7.70136 13.6479 7.9744C13.761 8.24744 13.9267 8.49553 14.1357 8.7045L21.2952 15.864ZM7.51058 25.6705C7.93247 26.0925 8.50474 26.3297 9.10149 26.3298C9.39698 26.3299 9.68957 26.2717 9.96258 26.1587C10.2356 26.0457 10.4837 25.88 10.6926 25.6711C10.9016 25.4622 11.0674 25.2142 11.1805 24.9412C11.2936 24.6682 11.3519 24.3756 11.3519 24.0802C11.352 23.7847 11.2939 23.4921 11.1808 23.2191C11.0678 22.9461 10.9021 22.698 10.6932 22.489L12.6811 24.478C13.1031 24.9 13.6755 25.1371 14.2724 25.1371C14.8692 25.1371 15.4417 24.9 15.8637 24.478C16.2857 24.056 16.5228 23.4836 16.5228 22.8867C16.5228 22.2898 16.2857 21.7174 15.8637 21.2954L8.7042 14.1359C8.49523 13.9269 8.24714 13.7611 7.9741 13.648C7.70107 13.5349 7.40843 13.4767 7.11289 13.4767C6.81736 13.4767 6.52472 13.5349 6.25168 13.648C5.97864 13.7611 5.73055 13.9269 5.52158 14.1359C5.3126 14.3449 5.14684 14.5929 5.03374 14.866C4.92065 15.139 4.86244 15.4317 4.86244 15.7272C4.86244 16.0227 4.92065 16.3154 5.03374 16.5884C5.14684 16.8614 5.3126 17.1095 5.52158 17.3185L7.51058 19.3064C7.08854 18.8845 6.51618 18.6475 5.91943 18.6476C5.32268 18.6477 4.75041 18.8849 4.32852 19.3069C3.90662 19.729 3.66967 20.3013 3.66977 20.8981C3.66988 21.4948 3.90704 22.0671 4.32908 22.489L7.51058 25.6705Z" stroke="#7C7C7C" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/> </g></symbol><symbol id="i-path-line1" viewBox="0 0 153.29 64.6985" fill="none"><path d="M2.54468 1.50023C2.54468 1.50023 -3.45072 37.6146 13.2838 51.516C26.8237 62.7636 54.744 67.2865 74.4833 58.7909C92.9481 50.8438 99.3119 38.7659 119.579 35.1473C131.887 32.9497 151.79 35.1473 151.79 35.1473" stroke="#E1E1E1" stroke-width="3" stroke-linecap="round" stroke-dasharray="6 6"/></symbol><symbol id="i-path-line2" viewBox="0 0 150.853 101.742" fill="none"><path d="M147.675 1.50026C147.675 1.50026 154.884 41.1515 139.418 57.5765C121.597 76.5043 98.9226 60.609 75.9777 70.9464C61.1382 77.6319 52.1279 85.2715 37.2443 91.838C23.9993 97.6815 1.50014 100.241 1.50014 100.241" stroke="#E1E1E1" stroke-width="3" stroke-linecap="round" stroke-dasharray="6 6"/></symbol><symbol id="i-phone-talk" viewBox="0 0 16 16" fill="none"><g> <path d="M13.9167 14.6667C12.1833 14.6667 10.5529 14.3389 9.02533 13.6833C7.49733 13.0278 6.164 12.1307 5.02533 10.992C3.88622 9.85289 2.98622 8.51956 2.32533 6.992C1.664 5.464 1.33333 3.82778 1.33333 2.08333C1.32222 1.88333 1.38889 1.70822 1.53333 1.558C1.67778 1.40822 1.85556 1.33333 2.06667 1.33333H4.66667C4.86667 1.33333 5.03889 1.40822 5.18333 1.558C5.32778 1.70822 5.4 1.88889 5.4 2.1C5.4 2.58889 5.43333 3.05 5.5 3.48333C5.56667 3.91667 5.67222 4.32778 5.81667 4.71667C5.87222 4.83889 5.88333 4.96378 5.85 5.09133C5.81667 5.21933 5.75 5.33889 5.65 5.45L3.98333 7.11667C4.46111 8.09444 5.13889 9.02222 6.01667 9.9C6.89444 10.7778 7.83889 11.4778 8.85 12L10.5167 10.3333C10.6167 10.2333 10.7333 10.1667 10.8667 10.1333C11 10.1 11.1333 10.1111 11.2667 10.1667C11.6778 10.3 12.1027 10.4027 12.5413 10.4747C12.9804 10.5471 13.4333 10.5833 13.9 10.5833C14.1111 10.5833 14.2918 10.6611 14.442 10.8167C14.5918 10.9722 14.6667 11.1611 14.6667 11.3833V13.9333C14.6667 14.1333 14.5944 14.3056 14.45 14.45C14.3056 14.5944 14.1278 14.6667 13.9167 14.6667ZM13.3333 8C13.3333 6.51111 12.8167 5.25 11.7833 4.21667C10.75 3.18333 9.48889 2.66667 8 2.66667V1.33333C8.92222 1.33333 9.78889 1.50822 10.6 1.858C11.4111 2.20822 12.1167 2.68333 12.7167 3.28333C13.3167 3.88333 13.7916 4.58889 14.1413 5.4C14.4916 6.21111 14.6667 7.07778 14.6667 8H13.3333ZM10.6667 8C10.6667 7.26667 10.4056 6.63889 9.88333 6.11667C9.36111 5.59444 8.73333 5.33333 8 5.33333V4C9.11111 4 10.0556 4.38889 10.8333 5.16667C11.6111 5.94444 12 6.88889 12 8H10.6667Z" fill="#608EDC"/> </g></symbol><symbol id="i-ring-daily" viewBox="0 0 67.875 67.875" fill="none"><g> <path d="M33.9351 62.7846C49.8668 62.7846 62.782 49.8695 62.782 33.9378C62.782 18.0061 49.8668 5.09089 33.9351 5.09089C18.0034 5.09089 5.08824 18.0061 5.08824 33.9378C5.08824 49.8695 18.0034 62.7846 33.9351 62.7846Z" stroke="#EDEDED" stroke-width="4.66641"/> </g></symbol><symbol id="i-settings" viewBox="0 0 24 24" fill="none"><g> <path d="M9.9042 4.9225C9.95379 4.40081 10.1961 3.91634 10.5838 3.56375C10.9715 3.21116 11.4767 3.01579 12.0008 3.01579C12.5248 3.01579 13.03 3.21116 13.4177 3.56375C13.8054 3.91634 14.0477 4.40081 14.0973 4.9225C14.1271 5.25951 14.2377 5.58438 14.4196 5.86961C14.6016 6.15484 14.8496 6.39203 15.1426 6.56111C15.4357 6.73019 15.7651 6.82618 16.1031 6.84096C16.4411 6.85574 16.7777 6.78886 17.0844 6.646C17.5606 6.4298 18.1002 6.39852 18.5982 6.55824C19.0962 6.71796 19.517 7.05726 19.7786 7.5101C20.0402 7.96293 20.124 8.49692 20.0136 9.00812C19.9032 9.51931 19.6066 9.97116 19.1814 10.2757C18.9045 10.47 18.6785 10.728 18.5225 11.0281C18.3665 11.3282 18.285 11.6614 18.285 11.9997C18.285 12.3379 18.3665 12.6711 18.5225 12.9712C18.6785 13.2713 18.9045 13.5293 19.1814 13.7236C19.6066 14.0281 19.9032 14.48 20.0136 14.9912C20.124 15.5024 20.0402 16.0364 19.7786 16.4892C19.517 16.942 19.0962 17.2813 18.5982 17.4411C18.1002 17.6008 17.5606 17.5695 17.0844 17.3533C16.7777 17.2104 16.4411 17.1436 16.1031 17.1583C15.7651 17.1731 15.4357 17.2691 15.1426 17.4382C14.8496 17.6073 14.6016 17.8445 14.4196 18.1297C14.2377 18.4149 14.1271 18.7398 14.0973 19.0768C14.0477 19.5985 13.8054 20.083 13.4177 20.4356C13.03 20.7881 12.5248 20.9835 12.0008 20.9835C11.4767 20.9835 10.9715 20.7881 10.5838 20.4356C10.1961 20.083 9.95379 19.5985 9.9042 19.0768C9.87445 18.7397 9.76389 18.4147 9.58188 18.1293C9.39987 17.844 9.15178 17.6068 8.85861 17.4377C8.56545 17.2686 8.23585 17.1726 7.89773 17.1579C7.55961 17.1432 7.22293 17.2103 6.9162 17.3533C6.44001 17.5695 5.9004 17.6008 5.4024 17.4411C4.90441 17.2813 4.48366 16.942 4.22204 16.4892C3.96042 16.0364 3.87665 15.5024 3.98703 14.9912C4.09741 14.48 4.39405 14.0281 4.8192 13.7236C5.09606 13.5293 5.32206 13.2713 5.47808 12.9712C5.63411 12.6711 5.71556 12.3379 5.71556 11.9997C5.71556 11.6614 5.63411 11.3282 5.47808 11.0281C5.32206 10.728 5.09606 10.47 4.8192 10.2757C4.39464 9.971 4.09853 9.51934 3.98842 9.00849C3.8783 8.49763 3.96205 7.96409 4.22339 7.51154C4.48473 7.059 4.90499 6.71978 5.40249 6.55982C5.89999 6.39986 6.43919 6.43057 6.9153 6.646C7.22199 6.78886 7.55857 6.85574 7.89658 6.84096C8.23458 6.82618 8.56404 6.73019 8.85709 6.56111C9.15013 6.39203 9.39813 6.15484 9.58008 5.86961C9.76204 5.58438 9.8726 5.25951 9.9024 4.9225M14.7003 12C14.7003 13.4911 13.4914 14.7 12.0003 14.7C10.5091 14.7 9.30025 13.4911 9.30025 12C9.30025 10.5088 10.5091 9.29997 12.0003 9.29997C13.4914 9.29997 14.7003 10.5088 14.7003 12Z" stroke="#353535" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/> </g></symbol><symbol id="i-streak-fire" viewBox="0 0 25.9494 25.6" fill="none"><g> <path d="M13.1494 0C20.2186 0 25.9491 5.73065 25.9492 12.7998C25.9492 19.869 20.2187 25.5996 13.1494 25.5996H12.7998C5.73065 25.5995 0 19.869 0 12.7998C0.000104113 5.73071 5.73071 0.000101536 12.7998 0H13.1494Z" fill="#EDEDED"/> <path d="M11.3067 6.33986C11.5078 6.15167 11.8198 6.15425 12.0209 6.34244C12.7324 7.01014 13.4001 7.7294 14.024 8.50796C14.3075 8.13673 14.6298 7.73198 14.9778 7.402C15.1815 7.21123 15.496 7.21123 15.6997 7.40458C16.5916 8.25531 17.347 9.37932 17.8781 10.4466C18.4014 11.4984 18.7494 12.5735 18.7494 13.3314C18.7494 16.6209 16.1766 19.4 12.9747 19.4C9.73675 19.4 7.2 16.6183 7.2 13.3288C7.2 12.3389 7.65888 11.1298 8.37041 9.93359C9.08967 8.71935 10.1054 7.45356 11.3067 6.33986ZM13.0185 16.9251C13.6708 16.9251 14.2482 16.7447 14.7922 16.3837C15.8775 15.6258 16.1689 14.1099 15.5166 12.9189C15.4006 12.6869 15.1041 12.6714 14.9366 12.8674L14.2869 13.6227C14.1168 13.8186 13.81 13.8135 13.6501 13.6098C13.2248 13.0684 12.4643 12.1017 12.0312 11.5526C11.8688 11.3463 11.5594 11.3438 11.3944 11.55C10.523 12.6456 10.0848 13.3365 10.0848 14.1125C10.0874 15.8785 11.3918 16.9251 13.0185 16.9251Z" fill="#FF6904"/> </g></symbol><symbol id="i-streak-po" viewBox="0 0 25.9494 25.6" fill="none"><g> <path d="M13.1494 0C20.2186 0 25.9491 5.73065 25.9492 12.7998C25.9492 19.869 20.2187 25.5996 13.1494 25.5996H12.7998C5.73066 25.5995 0 19.869 0 12.7998C0.000105143 5.73072 5.73071 0.000102553 12.7998 0H13.1494Z" fill="#EDEDED"/> <path d="M11.3067 6.33986C11.5078 6.15167 11.8198 6.15425 12.0209 6.34244C12.7324 7.01014 13.4001 7.7294 14.024 8.50796C14.3075 8.13673 14.6298 7.73198 14.9778 7.402C15.1815 7.21123 15.496 7.21123 15.6997 7.40458C16.5916 8.25531 17.347 9.37932 17.8781 10.4466C18.4014 11.4984 18.7494 12.5735 18.7494 13.3314C18.7494 16.6209 16.1766 19.4 12.9747 19.4C9.73675 19.4 7.2 16.6183 7.2 13.3288C7.2 12.3389 7.65888 11.1298 8.37041 9.93359C9.08967 8.71935 10.1054 7.45356 11.3067 6.33986ZM13.0185 16.9251C13.6708 16.9251 14.2482 16.7447 14.7922 16.3837C15.8775 15.6258 16.1689 14.1099 15.5166 12.9189C15.4006 12.6869 15.1041 12.6714 14.9366 12.8674L14.2869 13.6227C14.1168 13.8186 13.81 13.8135 13.6501 13.6098C13.2248 13.0684 12.4643 12.1017 12.0312 11.5526C11.8688 11.3463 11.5594 11.3438 11.3944 11.55C10.523 12.6456 10.0848 13.3365 10.0848 14.1125C10.0874 15.8785 11.3918 16.9251 13.0185 16.9251Z" fill="#767676"/> </g></symbol><symbol id="i-streak-today" viewBox="0 0 25.6 25.6" fill="none"><g> <path d="M13.8057 0.0380859C14.4827 0.0907011 15.1447 0.197689 15.7881 0.351562L15.7041 0.708008C16.343 0.860881 16.9632 1.06227 17.5596 1.30957L17.6982 0.97168C18.321 1.22984 18.9187 1.53569 19.4873 1.88477L19.2969 2.19727C19.8532 2.53892 20.381 2.9234 20.875 3.3457L21.1104 3.06836C21.6202 3.50415 22.0944 3.97946 22.5303 4.48926L22.2549 4.72559C22.6771 5.21949 23.0617 5.74651 23.4033 6.30273L23.7139 6.11133C24.063 6.67987 24.3687 7.27768 24.627 7.90039L24.29 8.04102C24.5373 8.63723 24.7397 9.25674 24.8926 9.89551L25.248 9.81055C25.4021 10.4545 25.5079 11.1172 25.5605 11.7949L25.1953 11.8232C25.2203 12.1454 25.2334 12.4711 25.2334 12.7998C25.2334 13.1286 25.2203 13.4551 25.1953 13.7773L25.5605 13.8047C25.508 14.4821 25.402 15.1444 25.248 15.7881L24.8926 15.7041C24.7397 16.3431 24.5374 16.9632 24.29 17.5596L24.627 17.6982C24.3688 18.3208 24.0639 18.9188 23.7148 19.4873L23.4033 19.2969C23.0617 19.8533 22.6772 20.381 22.2549 20.875L22.5303 21.1104C22.0946 21.62 21.62 22.0946 21.1104 22.5303L20.875 22.2549C20.381 22.6772 19.8533 23.0617 19.2969 23.4033L19.4873 23.7148C18.9188 24.0639 18.3208 24.3688 17.6982 24.627L17.5596 24.29C16.9632 24.5374 16.3431 24.7397 15.7041 24.8926L15.7881 25.248C15.1444 25.402 14.4821 25.508 13.8047 25.5605L13.7773 25.1953C13.4551 25.2203 13.1286 25.2334 12.7998 25.2334C12.4711 25.2334 12.1454 25.2203 11.8232 25.1953L11.7949 25.5605C11.1172 25.5079 10.4545 25.4021 9.81055 25.248L9.89551 24.8926C9.25674 24.7397 8.63723 24.5373 8.04102 24.29L7.90039 24.627C7.27768 24.3687 6.67987 24.063 6.11133 23.7139L6.30273 23.4033C5.74651 23.0617 5.21949 22.6771 4.72559 22.2549L4.48926 22.5303C3.97946 22.0944 3.50415 21.6202 3.06836 21.1104L3.3457 20.875C2.9234 20.381 2.53892 19.8532 2.19727 19.2969L1.88477 19.4873C1.53569 18.9187 1.22984 18.321 0.97168 17.6982L1.30957 17.5596C1.06227 16.9632 0.86088 16.343 0.708008 15.7041L0.351562 15.7881C0.197689 15.1447 0.0907011 14.4827 0.0380859 13.8057L0.404297 13.7773C0.379261 13.4551 0.366211 13.1286 0.366211 12.7998C0.366216 12.4711 0.379272 12.1454 0.404297 11.8232L0.0380859 11.7939C0.0907465 11.1166 0.197551 10.4542 0.351562 9.81055L0.708008 9.89551C0.86084 9.25684 1.06239 8.63714 1.30957 8.04102L0.97168 7.90039C1.22996 7.27757 1.53652 6.67996 1.88574 6.11133L2.19727 6.30273C2.53887 5.7465 2.92347 5.21949 3.3457 4.72559L3.06836 4.48926C3.50429 3.97928 3.97928 3.50429 4.48926 3.06836L4.72559 3.3457C5.21949 2.92347 5.7465 2.53887 6.30273 2.19727L6.11133 1.88574C6.67996 1.53652 7.27757 1.22996 7.90039 0.97168L8.04102 1.30957C8.63714 1.06239 9.25684 0.86084 9.89551 0.708008L9.81055 0.351562C10.4542 0.197551 11.1166 0.0907465 11.7939 0.0380859L11.8232 0.404297C12.1454 0.379272 12.4711 0.366216 12.7998 0.366211C13.1286 0.366211 13.4551 0.379261 13.7773 0.404297L13.8057 0.0390625V0.0380859Z" fill="#EDEDED"/> <path d="M13.8057 0.0380859C14.4827 0.0907011 15.1447 0.197689 15.7881 0.351562L15.7041 0.708008C16.343 0.860881 16.9632 1.06227 17.5596 1.30957L17.6982 0.97168C18.321 1.22984 18.9187 1.53569 19.4873 1.88477L19.2969 2.19727C19.8532 2.53892 20.381 2.9234 20.875 3.3457L21.1104 3.06836C21.6202 3.50415 22.0944 3.97946 22.5303 4.48926L22.2549 4.72559C22.6771 5.21949 23.0617 5.74651 23.4033 6.30273L23.7139 6.11133C24.063 6.67987 24.3687 7.27768 24.627 7.90039L24.29 8.04102C24.5373 8.63723 24.7397 9.25674 24.8926 9.89551L25.248 9.81055C25.4021 10.4545 25.5079 11.1172 25.5605 11.7949L25.1953 11.8232C25.2203 12.1454 25.2334 12.4711 25.2334 12.7998C25.2334 13.1286 25.2203 13.4551 25.1953 13.7773L25.5605 13.8047C25.508 14.4821 25.402 15.1444 25.248 15.7881L24.8926 15.7041C24.7397 16.3431 24.5374 16.9632 24.29 17.5596L24.627 17.6982C24.3688 18.3208 24.0639 18.9188 23.7148 19.4873L23.4033 19.2969C23.0617 19.8533 22.6772 20.381 22.2549 20.875L22.5303 21.1104C22.0946 21.62 21.62 22.0946 21.1104 22.5303L20.875 22.2549C20.381 22.6772 19.8533 23.0617 19.2969 23.4033L19.4873 23.7148C18.9188 24.0639 18.3208 24.3688 17.6982 24.627L17.5596 24.29C16.9632 24.5374 16.3431 24.7397 15.7041 24.8926L15.7881 25.248C15.1444 25.402 14.4821 25.508 13.8047 25.5605L13.7773 25.1953C13.4551 25.2203 13.1286 25.2334 12.7998 25.2334C12.4711 25.2334 12.1454 25.2203 11.8232 25.1953L11.7949 25.5605C11.1172 25.5079 10.4545 25.4021 9.81055 25.248L9.89551 24.8926C9.25674 24.7397 8.63723 24.5373 8.04102 24.29L7.90039 24.627C7.27768 24.3687 6.67987 24.063 6.11133 23.7139L6.30273 23.4033C5.74651 23.0617 5.21949 22.6771 4.72559 22.2549L4.48926 22.5303C3.97946 22.0944 3.50415 21.6202 3.06836 21.1104L3.3457 20.875C2.9234 20.381 2.53892 19.8532 2.19727 19.2969L1.88477 19.4873C1.53569 18.9187 1.22984 18.321 0.97168 17.6982L1.30957 17.5596C1.06227 16.9632 0.86088 16.343 0.708008 15.7041L0.351562 15.7881C0.197689 15.1447 0.0907011 14.4827 0.0380859 13.8057L0.404297 13.7773C0.379261 13.4551 0.366211 13.1286 0.366211 12.7998C0.366216 12.4711 0.379272 12.1454 0.404297 11.8232L0.0380859 11.7939C0.0907465 11.1166 0.197551 10.4542 0.351562 9.81055L0.708008 9.89551C0.86084 9.25684 1.06239 8.63714 1.30957 8.04102L0.97168 7.90039C1.22996 7.27757 1.53652 6.67996 1.88574 6.11133L2.19727 6.30273C2.53887 5.7465 2.92347 5.21949 3.3457 4.72559L3.06836 4.48926C3.50429 3.97928 3.97928 3.50429 4.48926 3.06836L4.72559 3.3457C5.21949 2.92347 5.7465 2.53887 6.30273 2.19727L6.11133 1.88574C6.67996 1.53652 7.27757 1.22996 7.90039 0.97168L8.04102 1.30957C8.63714 1.06239 9.25684 0.86084 9.89551 0.708008L9.81055 0.351562C10.4542 0.197551 11.1166 0.0907465 11.7939 0.0380859L11.8232 0.404297C12.1454 0.379272 12.4711 0.366216 12.7998 0.366211C13.1286 0.366211 13.4551 0.379261 13.7773 0.404297L13.8057 0.0390625V0.0380859Z" stroke="#FF6600" stroke-width="0.733333" stroke-dasharray="2.2 2.2"/> <g> </g> </g></symbol><symbol id="i-tab-domu" viewBox="0 0 24 24" fill="none"><g> <path d="M14.4 19.15V12.7081C14.4 12.4945 14.3157 12.2897 14.1657 12.1387C14.0157 11.9877 13.8122 11.9028 13.6 11.9028H10.4C10.1878 11.9028 9.98434 11.9877 9.83431 12.1387C9.68429 12.2897 9.6 12.4945 9.6 12.7081V19.15M4.8 10.2923C4.79994 10.0581 4.85067 9.82659 4.94863 9.61408C5.04659 9.40158 5.18944 9.21314 5.3672 9.06192L10.9672 4.23046C11.256 3.98479 11.6219 3.85 12 3.85C12.3781 3.85 12.744 3.98479 13.0328 4.23046L18.6328 9.06192C18.8106 9.21314 18.9534 9.40158 19.0514 9.61408C19.1493 9.82659 19.2001 10.0581 19.2 10.2923V17.5395C19.2 17.9666 19.0314 18.3763 18.7314 18.6783C18.4313 18.9803 18.0243 19.15 17.6 19.15H6.4C5.97565 19.15 5.56869 18.9803 5.26863 18.6783C4.96857 18.3763 4.8 17.9666 4.8 17.5395V10.2923Z" stroke="#353535" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/> </g></symbol><symbol id="i-tab-gramatika" viewBox="0 0 24 24" fill="none"><g> <path d="M12.0112 8.05505V19.4092M12.0112 8.05505C12.0112 7.19468 11.6694 6.36954 11.0611 5.76117C10.4527 5.15279 9.62756 4.81101 8.76719 4.81101H4.71213C4.49704 4.81101 4.29076 4.89646 4.13866 5.04855C3.98657 5.20064 3.90112 5.40693 3.90112 5.62202V16.1652C3.90112 16.3803 3.98657 16.5865 4.13866 16.7386C4.29076 16.8907 4.49704 16.9762 4.71213 16.9762H9.5782C10.2235 16.9762 10.8423 17.2325 11.2986 17.6888C11.7549 18.1451 12.0112 18.7639 12.0112 19.4092M12.0112 8.05505C12.0112 7.19468 12.353 6.36954 12.9614 5.76117C13.5698 5.15279 14.3949 4.81101 15.2553 4.81101H19.3103C19.5254 4.81101 19.7317 4.89646 19.8838 5.04855C20.0359 5.20064 20.1213 5.40693 20.1213 5.62202V16.1652C20.1213 16.3803 20.0359 16.5865 19.8838 16.7386C19.7317 16.8907 19.5254 16.9762 19.3103 16.9762H14.4443C13.799 16.9762 13.1801 17.2325 12.7238 17.6888C12.2676 18.1451 12.0112 18.7639 12.0112 19.4092" stroke="#767676" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/> </g></symbol><symbol id="i-tab-kurz" viewBox="0 0 24 24" fill="none"><g> <path d="M21.0006 10.2V15.6M6.60064 12.45V15.6C6.60064 16.3161 7.16957 17.0028 8.18226 17.5092C9.19496 18.0155 10.5685 18.3 12.0006 18.3C13.4328 18.3 14.8063 18.0155 15.819 17.5092C16.8317 17.0028 17.4006 16.3161 17.4006 15.6V12.45M20.4787 11.0297C20.6398 10.9586 20.7765 10.8418 20.8719 10.6938C20.9673 10.5458 21.0172 10.373 21.0154 10.1969C21.0135 10.0208 20.9601 9.84915 20.8617 9.70313C20.7632 9.55712 20.6241 9.44319 20.4616 9.37546L12.7477 5.86186C12.5132 5.75489 12.2584 5.69954 12.0007 5.69954C11.7429 5.69954 11.4882 5.75489 11.2537 5.86186L3.54068 9.37186C3.38045 9.44203 3.24414 9.55738 3.14843 9.70379C3.05271 9.8502 3.00174 10.0213 3.00174 10.1963C3.00174 10.3712 3.05271 10.5423 3.14843 10.6887C3.24414 10.8351 3.38045 10.9505 3.54068 11.0207L11.2537 14.5379C11.4882 14.6448 11.7429 14.7002 12.0007 14.7002C12.2584 14.7002 12.5132 14.6448 12.7477 14.5379L20.4787 11.0297Z" stroke="#767676" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/> </g></symbol><symbol id="i-tab-uspechy" viewBox="0 0 24 24" fill="none"><g> <path d="M15.3685 12.7212L16.6184 19.6275C16.6324 19.7088 16.6208 19.7924 16.5851 19.8671C16.5494 19.9417 16.4913 20.0039 16.4187 20.0453C16.346 20.0867 16.2622 20.1053 16.1785 20.0987C16.0948 20.0921 16.0151 20.0605 15.9501 20.0082L12.9966 17.8316C12.8541 17.7271 12.6809 17.6706 12.5029 17.6706C12.3249 17.6706 12.1517 17.7271 12.0091 17.8316L9.05067 20.0074C8.98576 20.0596 8.90618 20.0911 8.82256 20.0977C8.73893 20.1044 8.65523 20.0858 8.58262 20.0445C8.51001 20.0033 8.45195 19.9412 8.41618 19.8667C8.38041 19.7922 8.36863 19.7087 8.38242 19.6275L9.63147 12.7212M17.45 8.76019C17.45 11.4444 15.2338 13.6204 12.5 13.6204C9.76619 13.6204 7.55 11.4444 7.55 8.76019C7.55 6.07598 9.76619 3.9 12.5 3.9C15.2338 3.9 17.45 6.07598 17.45 8.76019Z" stroke="#767676" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/> </g></symbol><symbol id="i-toast-close" viewBox="0 0 16 16" fill="none"><g> <path d="M8 8.93333L4.73333 12.2C4.61111 12.3222 4.45556 12.3833 4.26667 12.3833C4.07778 12.3833 3.92222 12.3222 3.8 12.2C3.67778 12.0778 3.61667 11.9222 3.61667 11.7333C3.61667 11.5444 3.67778 11.3889 3.8 11.2667L7.06667 8L3.8 4.73333C3.67778 4.61111 3.61667 4.45556 3.61667 4.26667C3.61667 4.07778 3.67778 3.92222 3.8 3.8C3.92222 3.67778 4.07778 3.61667 4.26667 3.61667C4.45556 3.61667 4.61111 3.67778 4.73333 3.8L8 7.06667L11.2667 3.8C11.3889 3.67778 11.5444 3.61667 11.7333 3.61667C11.9222 3.61667 12.0778 3.67778 12.2 3.8C12.3222 3.92222 12.3833 4.07778 12.3833 4.26667C12.3833 4.45556 12.3222 4.61111 12.2 4.73333L8.93333 8L12.2 11.2667C12.3222 11.3889 12.3833 11.5444 12.3833 11.7333C12.3833 11.9222 12.3222 12.0778 12.2 12.2C12.0778 12.3222 11.9222 12.3833 11.7333 12.3833C11.5444 12.3833 11.3889 12.3222 11.2667 12.2L8 8.93333Z" fill="#0A2800"/> </g></symbol><symbol id="i-toast-info" viewBox="0 0 20 20" fill="none"><g> <path d="M10 14.1667C10.2361 14.1667 10.434 14.0868 10.5937 13.9271C10.7535 13.7674 10.8333 13.5694 10.8333 13.3333V10C10.8333 9.76389 10.7535 9.56597 10.5937 9.40625C10.434 9.24653 10.2361 9.16667 10 9.16667C9.76389 9.16667 9.56597 9.24653 9.40625 9.40625C9.24653 9.56597 9.16667 9.76389 9.16667 10V13.3333C9.16667 13.5694 9.24653 13.7674 9.40625 13.9271C9.56597 14.0868 9.76389 14.1667 10 14.1667ZM10 7.5C10.2361 7.5 10.434 7.42014 10.5937 7.26042C10.7535 7.10069 10.8333 6.90278 10.8333 6.66667C10.8333 6.43056 10.7535 6.23264 10.5937 6.07292C10.434 5.91319 10.2361 5.83333 10 5.83333C9.76389 5.83333 9.56597 5.91319 9.40625 6.07292C9.24653 6.23264 9.16667 6.43056 9.16667 6.66667C9.16667 6.90278 9.24653 7.10069 9.40625 7.26042C9.56597 7.42014 9.76389 7.5 10 7.5ZM10 18.3333C8.84722 18.3333 7.76389 18.1146 6.75 17.6771C5.73611 17.2396 4.85417 16.6458 4.10417 15.8958C3.35417 15.1458 2.76042 14.2639 2.32292 13.25C1.88542 12.2361 1.66667 11.1528 1.66667 10C1.66667 8.84722 1.88542 7.76389 2.32292 6.75C2.76042 5.73611 3.35417 4.85417 4.10417 4.10417C4.85417 3.35417 5.73611 2.76042 6.75 2.32292C7.76389 1.88542 8.84722 1.66667 10 1.66667C11.1528 1.66667 12.2361 1.88542 13.25 2.32292C14.2639 2.76042 15.1458 3.35417 15.8958 4.10417C16.6458 4.85417 17.2396 5.73611 17.6771 6.75C18.1146 7.76389 18.3333 8.84722 18.3333 10C18.3333 11.1528 18.1146 12.2361 17.6771 13.25C17.2396 14.2639 16.6458 15.1458 15.8958 15.8958C15.1458 16.6458 14.2639 17.2396 13.25 17.6771C12.2361 18.1146 11.1528 18.3333 10 18.3333Z" fill="#65AE39"/> </g></symbol><symbol id="i-wifi" viewBox="0 0 17.1417 12.3283" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.5713 2.46628C11.0584 2.46639 13.4504 3.38847 15.2529 5.04195C15.3887 5.1696 15.6056 5.16799 15.7393 5.03834L17.0368 3.77487C17.1045 3.70911 17.1422 3.62004 17.1417 3.52735C17.1411 3.43467 17.1023 3.34603 17.0338 3.28104C12.3028 -1.09368 4.83907 -1.09368 0.108056 3.28104C0.039524 3.34598 0.000639766 3.4346 7.82398e-06 3.52728C-0.000624118 3.61996 0.0370483 3.70906 0.104689 3.77487L1.40255 5.03834C1.53615 5.16819 1.75327 5.1698 1.88893 5.04195C3.69167 3.38836 6.08395 2.46628 8.5713 2.46628ZM8.56795 6.68656C9.92527 6.68647 11.2341 7.19821 12.2403 8.12234C12.3763 8.2535 12.5907 8.25065 12.7234 8.11593L14.0106 6.79663C14.0784 6.72742 14.1161 6.63355 14.1151 6.53599C14.1141 6.43844 14.0746 6.34536 14.0054 6.27757C10.9416 3.38672 6.19688 3.38672 3.13305 6.27757C3.06384 6.34536 3.02435 6.43849 3.02345 6.53607C3.02254 6.63365 3.06028 6.72752 3.12822 6.79663L4.41513 8.11593C4.54778 8.25065 4.76215 8.2535 4.89823 8.12234C5.90368 7.19882 7.21152 6.68713 8.56795 6.68656ZM11.0924 9.48011C11.0943 9.58546 11.0572 9.68703 10.9899 9.76084L8.81327 12.2156C8.74946 12.2877 8.66247 12.3283 8.5717 12.3283C8.48093 12.3283 8.39394 12.2877 8.33013 12.2156L6.1531 9.76084C6.08585 9.68697 6.04886 9.58537 6.05085 9.48002C6.05284 9.37467 6.09365 9.27491 6.16364 9.20429C7.55374 7.8904 9.58966 7.8904 10.9798 9.20429C11.0497 9.27497 11.0904 9.37476 11.0924 9.48011Z" fill="#353535"/></symbol></svg>
+
+<main class="stage">
+  <div class="left">
+    <div class="fit" id="fit">
+      <div class="phone" id="phone" aria-label="Náhled HP">
+        <div class="scr" id="hp">
+          <div class="sb"><div class="sb-time">9:41</div><div class="sb-gap"></div>
+            <div class="sb-lv"><svg width="19.2" height="12.226"><use href="#i-cell"/></svg><svg width="17.142" height="12.328"><use href="#i-wifi"/></svg><svg width="27.328" height="13"><use href="#i-battery"/></svg></div></div>
+
+          <div class="chip lang"><svg width="24" height="24"><use href="#i-flag-uk"/></svg><span class="t-bm">English</span></div>
+          <div class="hp-right">
+            <div class="chip streak" id="streakChip">
+              <span class="grp"><span class="fire" id="hdrFire">
+                  <svg class="dim" width="24" height="24" viewBox="0 0 24 24" fill="#767676"><path d="M9.68929 3.05045C9.96786 2.78974 10.4 2.79331 10.6786 3.05402C11.6643 3.97902 12.5893 4.97545 13.4536 6.05402C13.8464 5.53974 14.2929 4.97902 14.775 4.52188C15.0571 4.25759 15.4929 4.25759 15.775 4.52545C17.0107 5.70402 18.0571 7.26117 18.7929 8.73974C19.5179 10.1969 20 11.6862 20 12.7362C20 17.2933 16.4357 21.1433 12 21.1433C7.51429 21.1433 4 17.2897 4 12.7326C4 11.3612 4.63571 9.68617 5.62143 8.02902C6.61786 6.34688 8.025 4.59331 9.68929 3.05045ZM12.0607 17.7147C12.9643 17.7147 13.7643 17.4647 14.5179 16.9647C16.0214 15.9147 16.425 13.8147 15.5214 12.1647C15.3607 11.8433 14.95 11.8219 14.7179 12.0933L13.8179 13.1397C13.5821 13.4112 13.1571 13.404 12.9357 13.1219C12.3464 12.3719 11.2929 11.0326 10.6929 10.2719C10.4679 9.98617 10.0393 9.98259 9.81071 10.2683C8.60357 11.7862 7.99643 12.7433 7.99643 13.8183C8 16.2647 9.80714 17.7147 12.0607 17.7147Z"/></svg>
+                  <svg class="lit" width="24" height="24" viewBox="0 0 24 24" fill="#FF6904"><path d="M9.68929 3.05045C9.96786 2.78974 10.4 2.79331 10.6786 3.05402C11.6643 3.97902 12.5893 4.97545 13.4536 6.05402C13.8464 5.53974 14.2929 4.97902 14.775 4.52188C15.0571 4.25759 15.4929 4.25759 15.775 4.52545C17.0107 5.70402 18.0571 7.26117 18.7929 8.73974C19.5179 10.1969 20 11.6862 20 12.7362C20 17.2933 16.4357 21.1433 12 21.1433C7.51429 21.1433 4 17.2897 4 12.7326C4 11.3612 4.63571 9.68617 5.62143 8.02902C6.61786 6.34688 8.025 4.59331 9.68929 3.05045ZM12.0607 17.7147C12.9643 17.7147 13.7643 17.4647 14.5179 16.9647C16.0214 15.9147 16.425 13.8147 15.5214 12.1647C15.3607 11.8433 14.95 11.8219 14.7179 12.0933L13.8179 13.1397C13.5821 13.4112 13.1571 13.404 12.9357 13.1219C12.3464 12.3719 11.2929 11.0326 10.6929 10.2719C10.4679 9.98617 10.0393 9.98259 9.81071 10.2683C8.60357 11.7862 7.99643 12.7433 7.99643 13.8183C8 16.2647 9.80714 17.7147 12.0607 17.7147Z"/></svg>
+                </span><span class="num roll" id="streakNum"><span>12</span></span></span>
+              <span class="sep"></span>
+              <span class="grp"><span class="num" style="color:var(--tertiary)">3</span><svg width="24" height="24"><use href="#i-icefire"/></svg></span>
+            </div>
+            <div class="icon-btn"><span><svg width="24" height="24"><use href="#i-settings"/></svg></span></div>
+          </div>
+          <p class="greet t-hl-s">Dobré ráno, Davide</p>
+
+          <div class="daily" id="daily">
+            <div class="ring" id="ring">
+              <svg width="67.875" height="67.875" viewBox="0 0 67.875 67.875" fill="none">
+                <circle cx="33.9375" cy="33.9375" r="28.85" stroke="#EDEDED" stroke-width="4.666"/>
+                <circle class="arc" id="arc" cx="33.9375" cy="33.9375" r="28.9" stroke="#FFD635" stroke-width="4.4" stroke-linecap="round" pathLength="100" stroke-dasharray="100 100" stroke-dashoffset="100" transform="rotate(-90 33.9375 33.9375)"/>
+              </svg>
+              <div class="n"><b id="ringB"><span class="roll" id="ringNum"><span>0</span></span>/3</b><small>dnes</small></div>
+            </div>
+            <div class="dtxt" id="dtxt"></div>
+          </div>
+
+          <p class="dnes">Dnes</p>
+          <div class="streakbar">
+            <span class="sday">Po<svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="13" fill="#EDEDED"/><path d="M11.332 6.53986C11.5331 6.35167 11.8451 6.35425 12.0461 6.54244C12.7577 7.21014 13.4254 7.92941 14.0492 8.70796C14.3328 8.33673 14.6551 7.93198 15.0031 7.602C15.2068 7.41123 15.5213 7.41123 15.7249 7.60458C16.6169 8.45532 17.3723 9.57932 17.9033 10.6466C18.4267 11.6984 18.7747 12.7735 18.7747 13.5314C18.7747 16.8209 16.2019 19.6 13 19.6C9.76204 19.6 7.22529 16.8183 7.22529 13.5288C7.22529 12.5389 7.68417 11.3298 8.3957 10.1336C9.11496 8.91936 10.1307 7.65356 11.332 6.53986ZM13.0438 17.1251C13.6961 17.1251 14.2735 16.9447 14.8175 16.5837C15.9028 15.8258 16.1941 14.3099 15.5419 13.1189C15.4259 12.8869 15.1294 12.8714 14.9619 13.0674L14.3122 13.8227C14.1421 14.0186 13.8353 14.0135 13.6754 13.8098C13.2501 13.2684 12.4896 12.3017 12.0565 11.7526C11.894 11.5463 11.5847 11.5438 11.4197 11.75C10.5483 12.8456 10.1101 13.5365 10.1101 14.3125C10.1126 16.0785 11.4171 17.1251 13.0438 17.1251Z" fill="#767676"/></svg></span>
+            <span class="sday">Út<svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="13" fill="#EDEDED"/><path d="M11.332 6.53986C11.5331 6.35167 11.8451 6.35425 12.0461 6.54244C12.7577 7.21014 13.4254 7.92941 14.0492 8.70796C14.3328 8.33673 14.6551 7.93198 15.0031 7.602C15.2068 7.41123 15.5213 7.41123 15.7249 7.60458C16.6169 8.45532 17.3723 9.57932 17.9033 10.6466C18.4267 11.6984 18.7747 12.7735 18.7747 13.5314C18.7747 16.8209 16.2019 19.6 13 19.6C9.76204 19.6 7.22529 16.8183 7.22529 13.5288C7.22529 12.5389 7.68417 11.3298 8.3957 10.1336C9.11496 8.91936 10.1307 7.65356 11.332 6.53986ZM13.0438 17.1251C13.6961 17.1251 14.2735 16.9447 14.8175 16.5837C15.9028 15.8258 16.1941 14.3099 15.5419 13.1189C15.4259 12.8869 15.1294 12.8714 14.9619 13.0674L14.3122 13.8227C14.1421 14.0186 13.8353 14.0135 13.6754 13.8098C13.2501 13.2684 12.4896 12.3017 12.0565 11.7526C11.894 11.5463 11.5847 11.5438 11.4197 11.75C10.5483 12.8456 10.1101 13.5365 10.1101 14.3125C10.1126 16.0785 11.4171 17.1251 13.0438 17.1251Z" fill="#FF6904"/></svg></span>
+            <span class="sday">St<svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="13" fill="#EDEDED"/><path d="M11.332 6.53986C11.5331 6.35167 11.8451 6.35425 12.0461 6.54244C12.7577 7.21014 13.4254 7.92941 14.0492 8.70796C14.3328 8.33673 14.6551 7.93198 15.0031 7.602C15.2068 7.41123 15.5213 7.41123 15.7249 7.60458C16.6169 8.45532 17.3723 9.57932 17.9033 10.6466C18.4267 11.6984 18.7747 12.7735 18.7747 13.5314C18.7747 16.8209 16.2019 19.6 13 19.6C9.76204 19.6 7.22529 16.8183 7.22529 13.5288C7.22529 12.5389 7.68417 11.3298 8.3957 10.1336C9.11496 8.91936 10.1307 7.65356 11.332 6.53986ZM13.0438 17.1251C13.6961 17.1251 14.2735 16.9447 14.8175 16.5837C15.9028 15.8258 16.1941 14.3099 15.5419 13.1189C15.4259 12.8869 15.1294 12.8714 14.9619 13.0674L14.3122 13.8227C14.1421 14.0186 13.8353 14.0135 13.6754 13.8098C13.2501 13.2684 12.4896 12.3017 12.0565 11.7526C11.894 11.5463 11.5847 11.5438 11.4197 11.75C10.5483 12.8456 10.1101 13.5365 10.1101 14.3125C10.1126 16.0785 11.4171 17.1251 13.0438 17.1251Z" fill="#FF6904"/></svg></span>
+            <span class="sday">Čt<svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="13" fill="#EDEDED"/><path d="M11.332 6.53986C11.5331 6.35167 11.8451 6.35425 12.0461 6.54244C12.7577 7.21014 13.4254 7.92941 14.0492 8.70796C14.3328 8.33673 14.6551 7.93198 15.0031 7.602C15.2068 7.41123 15.5213 7.41123 15.7249 7.60458C16.6169 8.45532 17.3723 9.57932 17.9033 10.6466C18.4267 11.6984 18.7747 12.7735 18.7747 13.5314C18.7747 16.8209 16.2019 19.6 13 19.6C9.76204 19.6 7.22529 16.8183 7.22529 13.5288C7.22529 12.5389 7.68417 11.3298 8.3957 10.1336C9.11496 8.91936 10.1307 7.65356 11.332 6.53986ZM13.0438 17.1251C13.6961 17.1251 14.2735 16.9447 14.8175 16.5837C15.9028 15.8258 16.1941 14.3099 15.5419 13.1189C15.4259 12.8869 15.1294 12.8714 14.9619 13.0674L14.3122 13.8227C14.1421 14.0186 13.8353 14.0135 13.6754 13.8098C13.2501 13.2684 12.4896 12.3017 12.0565 11.7526C11.894 11.5463 11.5847 11.5438 11.4197 11.75C10.5483 12.8456 10.1101 13.5365 10.1101 14.3125C10.1126 16.0785 11.4171 17.1251 13.0438 17.1251Z" fill="#FF6904"/></svg></span>
+            <span class="sday today">Pá<span class="tday" id="today">
+                <svg class="dash" width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="12.63" fill="#EDEDED" stroke="#FF6904" stroke-width=".733" stroke-dasharray="2.2 2.2"/></svg>
+                <svg class="lit" width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="13" fill="#EDEDED"/><path d="M11.332 6.53986C11.5331 6.35167 11.8451 6.35425 12.0461 6.54244C12.7577 7.21014 13.4254 7.92941 14.0492 8.70796C14.3328 8.33673 14.6551 7.93198 15.0031 7.602C15.2068 7.41123 15.5213 7.41123 15.7249 7.60458C16.6169 8.45532 17.3723 9.57932 17.9033 10.6466C18.4267 11.6984 18.7747 12.7735 18.7747 13.5314C18.7747 16.8209 16.2019 19.6 13 19.6C9.76204 19.6 7.22529 16.8183 7.22529 13.5288C7.22529 12.5389 7.68417 11.3298 8.3957 10.1336C9.11496 8.91936 10.1307 7.65356 11.332 6.53986ZM13.0438 17.1251C13.6961 17.1251 14.2735 16.9447 14.8175 16.5837C15.9028 15.8258 16.1941 14.3099 15.5419 13.1189C15.4259 12.8869 15.1294 12.8714 14.9619 13.0674L14.3122 13.8227C14.1421 14.0186 13.8353 14.0135 13.6754 13.8098C13.2501 13.2684 12.4896 12.3017 12.0565 11.7526C11.894 11.5463 11.5847 11.5438 11.4197 11.75C10.5483 12.8456 10.1101 13.5365 10.1101 14.3125C10.1126 16.0785 11.4171 17.1251 13.0438 17.1251Z" fill="#FF6904"/></svg>
+              </span></span>
+          </div>
+
+          <!-- cesty: šedá podkladová, žlutá a zelená se odkrývají maskou -->
+          <svg class="seg-path" id="segA" style="left:131.79px;top:459.08px" width="150.501" height="71.3125" viewBox="0 0 150.501 71.3125" fill="none"></svg>
+          <svg class="seg-path" id="segB" style="left:182.92px;top:541.4px" width="150.583" height="112.044" viewBox="0 0 150.583 112.044" fill="none"></svg>
+
+          <div id="nodes"></div>
+
+          <div class="inline" id="banner">
+            <div class="l"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M8.5 7.83333V12.3333M11.5 6.33333V12.3333M17.5 13.8333V14.5833C17.5 14.9583 17.125 15.3333 16.75 15.3333H3.25C2.875 15.3333 2.5 14.9583 2.5 14.5833V13.8333M8.5 10.0833C8.5 11.326 7.49264 12.3333 6.25 12.3333C5.00736 12.3333 4 11.326 4 10.0833C4 8.84069 5.00736 7.83333 6.25 7.83333C7.49264 7.83333 8.5 8.84069 8.5 10.0833ZM16 10.0833C16 11.326 14.9926 12.3333 13.75 12.3333C12.5074 12.3333 11.5 11.326 11.5 10.0833C11.5 8.84069 12.5074 7.83333 13.75 7.83333C14.9926 7.83333 16 8.84069 16 10.0833Z" stroke="#65AE39" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><p>Přibyla nová gramatická karta</p></div>
+            <svg width="16" height="16" viewBox="0 0 16 16"><path fill="#0A2800" d="M8 8.93333L4.73333 12.2C4.61111 12.3222 4.45556 12.3833 4.26667 12.3833C4.07778 12.3833 3.92222 12.3222 3.8 12.2C3.67778 12.0778 3.61667 11.9222 3.61667 11.7333C3.61667 11.5444 3.67778 11.3889 3.8 11.2667L7.06667 8L3.8 4.73333C3.67778 4.61111 3.61667 4.45556 3.61667 4.26667C3.61667 4.07778 3.67778 3.92222 3.8 3.8C3.92222 3.67778 4.07778 3.61667 4.26667 3.61667C4.45556 3.61667 4.61111 3.67778 4.73333 3.8L8 7.06667L11.2667 3.8C11.3889 3.67778 11.5444 3.61667 11.7333 3.61667C11.9222 3.61667 12.0778 3.67778 12.2 3.8C12.3222 3.92222 12.3833 4.07778 12.3833 4.26667C12.3833 4.45556 12.3222 4.61111 12.2 4.73333L8.93333 8L12.2 11.2667C12.3222 11.3889 12.3833 11.5444 12.3833 11.7333C12.3833 11.9222 12.3222 12.0778 12.2 12.2C12.0778 12.3222 11.9222 12.3833 11.7333 12.3833C11.5444 12.3833 11.3889 12.3222 11.2667 12.2L8 8.93333Z"/></svg>
+          </div>
+
+          <nav class="tabbar">
+            <span class="tab is-active"><svg width="24" height="24"><use href="#i-tab-domu"/></svg>Domů</span>
+            <span class="tab"><svg width="24" height="24"><use href="#i-tab-kurz"/></svg>Kurz</span>
+            <span class="tab" id="tabGram"><svg id="gramIco" width="24" height="24"><use href="#i-tab-gramatika"/></svg>Gramatika<span class="badge" id="badge">1</span></span>
+            <span class="tab"><svg width="24" height="24"><use href="#i-tab-uspechy"/></svg>Úspěchy</span>
+          </nav>
+        </div>
+
+        <div class="fx" id="fx"></div>
+        <div class="kscrim" id="kScrim"></div>
+        <div class="strk" id="strk" aria-hidden="true">
+          <svg class="rays" id="kRays" width="400" height="908" viewBox="0 0 400 908" fill="none"></svg>
+          <div class="sb"><div class="sb-time">9:41</div><div class="sb-gap"></div>
+            <div class="sb-lv"><svg width="19.2" height="12.226"><use href="#i-cell"/></svg><svg width="17.142" height="12.328"><use href="#i-wifi"/></svg><svg width="27.328" height="13"><use href="#i-battery"/></svg></div></div>
+          <svg class="kshadow" id="kShadow" width="101.63" height="132" viewBox="0 0 101.628 132" fill="none"><ellipse cx="50.5" cy="116" rx="31.5" ry="16" fill="#000" fill-opacity=".07"/></svg>
+          <svg class="kflame" id="kFlame" width="101.63" height="132" viewBox="0 0 101.628 132" fill="none"><circle class="in" cx="48.8991" cy="75.8893" r="32.1549" fill="#BDBDBD"/><path class="out" d="M36.1371 1.23071C37.9065 -0.425284 40.6514 -0.402599 42.4208 1.2534C48.6818 7.12879 54.5572 13.4579 60.047 20.3087C62.5423 17.0421 65.3779 13.4806 68.4404 10.5769C70.2325 8.89822 73.0001 8.89822 74.7922 10.5996C82.6411 18.0856 89.2878 27.9762 93.9609 37.3678C98.566 46.6232 101.628 56.0828 101.628 62.7522C101.628 91.6981 78.9889 116.152 50.8142 116.152C22.322 116.152 0 91.6755 0 62.7295C0 54.0185 4.03792 43.3793 10.299 32.8535C16.628 22.1689 25.5659 11.0306 36.1371 1.23071ZM51.1999 94.375C56.9391 94.375 62.0206 92.787 66.8071 89.6111C76.3574 82.9418 78.9208 69.603 73.1815 59.1226C72.1607 57.081 69.5519 56.9449 68.0774 58.6689L62.3608 65.3156C60.8636 67.0397 58.1641 66.9943 56.7577 65.2022C53.0146 60.4383 46.3226 51.9315 42.5115 47.0996C41.0824 45.2848 38.3602 45.2621 36.9084 47.0769C29.2409 56.718 25.3844 62.7976 25.3844 69.6257C25.4071 85.1649 36.8857 94.375 51.1999 94.375Z" fill="#CFCFCF"/></svg>
+          <div class="knum" id="kNum"><span class="roll" id="kRoll"><span><span>12</span></span></span><span class="lbl" id="kLbl">dní v řadě</span></div>
+          <span class="kday" style="left:47px">Po</span><span class="kday" style="left:99px">Út</span><span class="kday" style="left:151px">St</span><span class="kday" style="left:203px">Čt</span><span class="kday" style="left:254px">Pá</span><span class="kday" style="left:304px">So</span><span class="kday" style="left:354px">Ne</span><div class="kcap" id="kCap"><i id="kSweep"></i></div><svg class="ktok" style="left:47px" width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="19.5" fill="#F9F9F9" stroke="#FF6333"/><path d="M16.9673 8.2543C17.3329 7.91213 17.9001 7.91681 18.2657 8.25898C19.5594 9.47299 20.7734 10.7807 21.9077 12.1963C22.4233 11.5213 23.0092 10.7854 23.642 10.1855C24.0123 9.83859 24.5841 9.83859 24.9544 10.1901C26.5762 11.7369 27.9496 13.7806 28.9152 15.7211C29.8667 17.6335 30.4995 19.5881 30.4995 20.9662C30.4995 26.9471 25.8216 32 20 32C14.1128 32 9.50052 26.9424 9.50052 20.9615C9.50052 19.1616 10.3349 16.9632 11.6285 14.7883C12.9363 12.5806 14.7831 10.2792 16.9673 8.2543ZM20.0797 27.5002C21.2656 27.5002 22.3155 27.1721 23.3045 26.5159C25.2779 25.1378 25.8075 22.3817 24.6216 20.2162C24.4107 19.7944 23.8717 19.7662 23.567 20.1225L22.3858 21.4958C22.0765 21.8521 21.5187 21.8427 21.2281 21.4724C20.4547 20.4881 19.0719 18.7303 18.2845 17.732C17.9892 17.357 17.4267 17.3523 17.1267 17.7273C15.5424 19.7194 14.7456 20.9755 14.7456 22.3864C14.7503 25.5972 17.122 27.5002 20.0797 27.5002Z" fill="#FF6904"/></svg><svg class="ktok" style="left:99px" width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="19.5" fill="#F9F9F9" stroke="#FF6333"/><path d="M16.9673 8.2543C17.3329 7.91213 17.9001 7.91681 18.2657 8.25898C19.5594 9.47299 20.7734 10.7807 21.9077 12.1963C22.4233 11.5213 23.0092 10.7854 23.642 10.1855C24.0123 9.83859 24.5841 9.83859 24.9544 10.1901C26.5762 11.7369 27.9496 13.7806 28.9152 15.7211C29.8667 17.6335 30.4995 19.5881 30.4995 20.9662C30.4995 26.9471 25.8216 32 20 32C14.1128 32 9.50052 26.9424 9.50052 20.9615C9.50052 19.1616 10.3349 16.9632 11.6285 14.7883C12.9363 12.5806 14.7831 10.2792 16.9673 8.2543ZM20.0797 27.5002C21.2656 27.5002 22.3155 27.1721 23.3045 26.5159C25.2779 25.1378 25.8075 22.3817 24.6216 20.2162C24.4107 19.7944 23.8717 19.7662 23.567 20.1225L22.3858 21.4958C22.0765 21.8521 21.5187 21.8427 21.2281 21.4724C20.4547 20.4881 19.0719 18.7303 18.2845 17.732C17.9892 17.357 17.4267 17.3523 17.1267 17.7273C15.5424 19.7194 14.7456 20.9755 14.7456 22.3864C14.7503 25.5972 17.122 27.5002 20.0797 27.5002Z" fill="#FF6904"/></svg><svg class="ktok" style="left:151px" width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="19.5" fill="#F9F9F9" stroke="#FF6333"/><path d="M16.9673 8.2543C17.3329 7.91213 17.9001 7.91681 18.2657 8.25898C19.5594 9.47299 20.7734 10.7807 21.9077 12.1963C22.4233 11.5213 23.0092 10.7854 23.642 10.1855C24.0123 9.83859 24.5841 9.83859 24.9544 10.1901C26.5762 11.7369 27.9496 13.7806 28.9152 15.7211C29.8667 17.6335 30.4995 19.5881 30.4995 20.9662C30.4995 26.9471 25.8216 32 20 32C14.1128 32 9.50052 26.9424 9.50052 20.9615C9.50052 19.1616 10.3349 16.9632 11.6285 14.7883C12.9363 12.5806 14.7831 10.2792 16.9673 8.2543ZM20.0797 27.5002C21.2656 27.5002 22.3155 27.1721 23.3045 26.5159C25.2779 25.1378 25.8075 22.3817 24.6216 20.2162C24.4107 19.7944 23.8717 19.7662 23.567 20.1225L22.3858 21.4958C22.0765 21.8521 21.5187 21.8427 21.2281 21.4724C20.4547 20.4881 19.0719 18.7303 18.2845 17.732C17.9892 17.357 17.4267 17.3523 17.1267 17.7273C15.5424 19.7194 14.7456 20.9755 14.7456 22.3864C14.7503 25.5972 17.122 27.5002 20.0797 27.5002Z" fill="#FF6904"/></svg><svg class="ktok" style="left:203px" width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="19.5" fill="#F9F9F9" stroke="#FF6333"/><path d="M16.9673 8.2543C17.3329 7.91213 17.9001 7.91681 18.2657 8.25898C19.5594 9.47299 20.7734 10.7807 21.9077 12.1963C22.4233 11.5213 23.0092 10.7854 23.642 10.1855C24.0123 9.83859 24.5841 9.83859 24.9544 10.1901C26.5762 11.7369 27.9496 13.7806 28.9152 15.7211C29.8667 17.6335 30.4995 19.5881 30.4995 20.9662C30.4995 26.9471 25.8216 32 20 32C14.1128 32 9.50052 26.9424 9.50052 20.9615C9.50052 19.1616 10.3349 16.9632 11.6285 14.7883C12.9363 12.5806 14.7831 10.2792 16.9673 8.2543ZM20.0797 27.5002C21.2656 27.5002 22.3155 27.1721 23.3045 26.5159C25.2779 25.1378 25.8075 22.3817 24.6216 20.2162C24.4107 19.7944 23.8717 19.7662 23.567 20.1225L22.3858 21.4958C22.0765 21.8521 21.5187 21.8427 21.2281 21.4724C20.4547 20.4881 19.0719 18.7303 18.2845 17.732C17.9892 17.357 17.4267 17.3523 17.1267 17.7273C15.5424 19.7194 14.7456 20.9755 14.7456 22.3864C14.7503 25.5972 17.122 27.5002 20.0797 27.5002Z" fill="#FF6904"/></svg><span class="kemp" style="left:254px" id="kPaE"></span><span class="kemp" style="left:304px"></span><span class="kemp" style="left:354px"></span><svg class="ktok" style="left:254px" id="kPaT" width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="19.5" fill="#F9F9F9" stroke="#FF6333"/><path d="M16.9673 8.2543C17.3329 7.91213 17.9001 7.91681 18.2657 8.25898C19.5594 9.47299 20.7734 10.7807 21.9077 12.1963C22.4233 11.5213 23.0092 10.7854 23.642 10.1855C24.0123 9.83859 24.5841 9.83859 24.9544 10.1901C26.5762 11.7369 27.9496 13.7806 28.9152 15.7211C29.8667 17.6335 30.4995 19.5881 30.4995 20.9662C30.4995 26.9471 25.8216 32 20 32C14.1128 32 9.50052 26.9424 9.50052 20.9615C9.50052 19.1616 10.3349 16.9632 11.6285 14.7883C12.9363 12.5806 14.7831 10.2792 16.9673 8.2543ZM20.0797 27.5002C21.2656 27.5002 22.3155 27.1721 23.3045 26.5159C25.2779 25.1378 25.8075 22.3817 24.6216 20.2162C24.4107 19.7944 23.8717 19.7662 23.567 20.1225L22.3858 21.4958C22.0765 21.8521 21.5187 21.8427 21.2281 21.4724C20.4547 20.4881 19.0719 18.7303 18.2845 17.732C17.9892 17.357 17.4267 17.3523 17.1267 17.7273C15.5424 19.7194 14.7456 20.9755 14.7456 22.3864C14.7503 25.5972 17.122 27.5002 20.0797 27.5002Z" fill="#FF6904"/></svg>
+          <div class="kcta" id="kCta">Pokračovat</div>
+        </div>
+        <div class="fly" id="fly"></div>
+        <div class="succ" id="succ" aria-hidden="true">
+          <svg class="rays" id="sRays" width="400" height="908" viewBox="0 0 400 908" fill="none"></svg>
+          <div class="sb"><div class="sb-time">9:41</div><div class="sb-gap"></div>
+            <div class="sb-lv"><svg width="19.2" height="12.226"><use href="#i-cell"/></svg><svg width="17.142" height="12.328"><use href="#i-wifi"/></svg><svg width="27.328" height="13"><use href="#i-battery"/></svg></div></div>
+          <div class="dots" id="sDots"><i></i><i></i><i></i></div>
+          <svg class="sbadge" id="sBadge" width="139" height="139" viewBox="0 0 139 139" fill="none"><path d="M58.3238 8.8524C64.872 3.66575 74.128 3.66575 80.6762 8.8524L87.1616 13.9893C89.7859 16.068 92.9379 17.3736 96.2633 17.7594L104.482 18.7129C112.779 19.6756 119.324 26.2207 120.287 34.5184L121.241 42.7367C121.626 46.0621 122.932 49.2141 125.011 51.8384L130.148 58.3238C135.334 64.872 135.334 74.128 130.148 80.6762L125.011 87.1616C122.932 89.7859 121.626 92.9379 121.241 96.2633L120.287 104.482C119.324 112.779 112.779 119.324 104.482 120.287L96.2633 121.241C92.9379 121.626 89.7859 122.932 87.1616 125.011L80.6762 130.148C74.128 135.334 64.872 135.334 58.3238 130.148L51.8384 125.011C49.2141 122.932 46.0621 121.626 42.7367 121.241L34.5184 120.287C26.2207 119.324 19.6756 112.779 18.7129 104.482L17.7594 96.2633C17.3736 92.9379 16.068 89.7859 13.9893 87.1616L8.8524 80.6762C3.66575 74.128 3.66575 64.872 8.8524 58.3238L13.9893 51.8384C16.068 49.2141 17.3736 46.0621 17.7594 42.7367L18.7129 34.5184C19.6756 26.2207 26.2207 19.6756 34.5184 18.7129L42.7367 17.7594C46.0621 17.3736 49.2141 16.068 51.8384 13.9893L58.3238 8.8524Z" fill="#65AE39"/><path d="M112.5 21.4998L23.4998 114.5C26.4998 119 32.804 120.456 36.14 120.652C43.368 121.077 47.677 121.764 51.152 124.544C56.712 128.992 61.2158 134 68.9998 134C73.4998 134.5 80.064 131.772 85.068 126.768C92.8718 118.964 99.9998 122.5 107.5 120C115 117.5 120.242 112 120.652 101.748C121.208 87.848 125.997 86.5935 130.104 80.62C135 73.4998 135 63.9998 130.104 58.38C124.109 51.4986 121.949 47.0747 121.764 45.592C120.165 32.804 120.84 28.7278 112.5 21.4998Z" fill="#000" fill-opacity=".1"/><path id="sCheck" d="M58 69.8281L65.5 77.3281L82 60.8281" stroke="#F9F9F9" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1 1"/></svg>
+          <div class="head" id="sHead"><h2>Výborně!</h2><p id="sBody"></p></div>
+        </div>
+      </div>
+    </div>
+    <div class="signals" aria-live="polite">
+      <span class="sig" id="sigH"><i></i>Haptika <b id="sigHv">—</b></span>
+      <span class="sig" id="sigS"><i></i>Zvuk <b id="sigSv">—</b></span>
+    </div>
+    <p class="cap">Klepnutím na telefon animaci přeskočíte na konec, jako v aplikaci.</p>
+  </div>
+
+  <section class="panel">
+    <header>
+      <h1>Animace splněných kroků na HP</h1>
+      <p class="lead">Animace se přehraje po návratu na HP, když uživatel splní krok denní cesty. Každý krok dostane malou odměnu, nejvíc se slaví 3/3, kdy je den hotový a série prodloužená. Procvičování nejde dokončit, takže po 3/3 se jen odkryje a zůstane aktivní.</p>
+    </header>
+
+    <div>
+      <h2>Přehrát krok</h2>
+      <div class="steps" id="steps">
+        <button class="step" data-s="1"><b>1</b>Lekce<small>0/3 → 1/3</small></button>
+        <button class="step" data-s="2"><b>2</b>Slova z lekce<small>1/3 → 2/3</small></button>
+        <button class="step" data-s="3"><b>3</b>Denní test<small>2/3 → 3/3, série</small></button>
+      </div>
+      <h2 style="margin-top:18px">Varianta</h2>
+      <div class="vars" id="vars" role="group" aria-label="Varianta">
+        <button data-v="A" aria-pressed="false"><b>A · Klidná</b><small>jen změna stavu</small></button>
+        <button data-v="B" aria-pressed="true"><b>B · Vyvážená</b><small>doporučená na každý den</small></button>
+        <button data-v="C" aria-pressed="false"><b>C · Výrazná</b><small>plná show, jen milníky</small></button>
+      </div>
+      <h2 style="margin-top:18px">Splnění uzlu</h2>
+      <div class="seg" id="nodeMode" role="group" aria-label="Splnění uzlu" style="display:inline-flex">
+        <button data-v="press" aria-pressed="false">Zmáčknutí</button><button data-v="coin" aria-pressed="true">Otočení mince</button>
+      </div>
+      <h2 style="margin-top:18px">Karta série (krok 3)</h2>
+      <div class="seg" id="streakMode" role="group" aria-label="Karta série" style="display:inline-flex">
+        <button data-v="after" aria-pressed="true">Po dokončení cesty</button><button data-v="before" aria-pressed="false">Před HP</button><button data-v="off" aria-pressed="false">Vypnuto</button>
+      </div>
+      <h2 style="margin-top:18px">Hotová cesta</h2>
+      <div class="seg" id="pathMode" role="group" aria-label="Hotová cesta" style="display:inline-flex">
+        <button data-v="dashed" aria-pressed="false">Čárkovaná (dnes)</button><button data-v="draw" aria-pressed="true">Plná · dokreslí se</button><button data-v="zip" aria-pressed="false">Plná · zacvaknutí</button>
+      </div>
+      <p class="sub" style="margin-top:8px;font-size:12.5px;line-height:18px;color:var(--stage-dim)">Plná čára = cesta, kterou uživatel prošel. Žlutá čárkovaná = kudy jde dál. Šedá čárkovaná = co ho čeká.</p>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="again">Přehrát znovu</button>
+        <button class="btn" id="all">Celý den v kuse</button>
+        <span style="flex:1"></span>
+        <div class="seg" id="speed" role="group" aria-label="Rychlost">
+          <button data-v="1" aria-pressed="true">1×</button><button data-v="0.5">0,5×</button><button data-v="0.25">0,25×</button>
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px;gap:10px 18px">
+        <label class="tgl"><input type="checkbox" id="optRet" checked>Success obrazovka</label>
+        <label class="tgl"><input type="checkbox" id="optDots" checked>Tečky (pomalé ukládání)</label>
+        
+        <label class="tgl"><input type="checkbox" id="optSound">Zvuk</label>
+        <label class="tgl"><input type="checkbox" id="optReduce">Omezit pohyb</label>
+      </div>
+    </div>
+
+    <details class="card" open>
+      <summary>Jak na to, aby to bylo chytlavé, ale ne „moc“</summary>
+      <div id="analysis" class="analysis"></div>
+    </details>
+
+    <div class="card">
+      <h3>Porovnání variant</h3>
+      <p class="sub">Spočítané z časové osy každé varianty. Zastávka oka = místo, kam se v tu chvíli dívat. Dráha oka = součet vzdáleností mezi nimi.</p>
+      <table class="tok cmp" id="compare"></table>
+    </div>
+
+    <div class="card">
+      <h3 id="specT">Krok 1 · Lekce</h3>
+      <p class="sub" id="specS"></p>
+      <div class="tl" id="tl"></div>
+      <div class="legend">
+        <span><i style="background:rgba(255,214,53,.75)"></i>pružina</span>
+        <span><i style="background:rgba(160,180,220,.55)"></i>křivka</span>
+        <span><i style="background:rgba(101,174,57,.75)"></i>částice</span>
+        <span><i style="background:#fff;width:9px;height:9px;transform:rotate(45deg);border-radius:2px"></i>haptika</span>
+        <span><i style="background:var(--tertiary);width:9px;height:9px;border-radius:50%"></i>zvuk</span>
+      </div>
+      <p class="tl-tip" id="tlTip"></p>
+      <ol class="beats" id="beats"></ol>
+    </div>
+
+    <details class="card" open>
+      <summary>Přechodová success obrazovka</summary>
+      <p class="sub">Přepoužitá obrazovka z Figmy („Přechodové success obrazovky“): Header section, Loading dots a odznak s paprsky. Podle kroku se mění jen popis. Hraje mezi dokončením kroku a návratem na HP.</p>
+      <ol class="beats">
+        <li><span class="t">0 ms</span><span>Nadpis „Výborně!“ a popis vyjedou o 8 px (300 ms). Při ukládání se vlní tečky. <span class="why">Tečky jen při ukládání delším než 400 ms. Když už se ukážou, tak aspoň 500 ms, jinak problikne. Duolingo ukazuje oslavu hned a ukládá na pozadí.</span></span></li>
+        <li><span class="t">+0</span><span>Tečky se slijí do středu odznaku (160 ms).</span></li>
+        <li><span class="t">+60</span><span>Odznak vyskočí ze 40 % s pootočením o −20° (pružina M3 fast). <span class="why">Vroubkovaný tvar s pootočením působí jako razítko, ne jako pouhé objevení.</span></span></li>
+        <li><span class="t">+200</span><span>Na vrcholu odznaku přijde lehká haptika a krátký tón a nakreslí se fajfka (200 ms).</span></li>
+        <li><span class="t">+140</span><span>Paprsky se rozvinou ze 70 % (520 ms). Ve variantě C se pak pomalu otáčejí.</span></li>
+        <li><span class="t">+1200</span><span>Fade through na HP: obrazovka zmizí (220 ms) a HP dosedne z 98 %. Po 300 ms začne animace kroku. <span class="why">Klepnutím jde obrazovka přeskočit.</span></span></li>
+      </ol>
+      <ul class="notes" style="margin-top:12px">
+        <li><b>Varianta A:</b> odznak se jen prolne (90 → 100 %) a fajfka je vidět hned.</li>
+        <li><b>Otázka:</b> měnit nadpis podle výsledku? Například „Výborně!“ od 8/10 a „Hotovo“ pod tím. Duolingo má tři souhrny podle výsledku.</li>
+      </ul>
+    </details>
+
+    <details class="card" open>
+      <summary>Karta série (po splnění denní cesty)</summary>
+      <p class="sub">Figma „Streak“. Nejdřív příčina, pak odměna: HP dokončí cestu (kroužek 3/3, „Pecka, máš hotovo!“) a teprve potom zdola vyjede karta série přes ztmavenou HP. Sérii u nás prodlužuje splnění celého dne, ne samotný test, proto karta patří až za 3/3. Je zároveň vrcholem i závěrem dne.</p>
+      <ol class="beats">
+        <li><span class="t">HP</span><span>Uzel testu zezelená, cesta se dokreslí, kroužek se uzavře na 3/3 a změní se text na „Pecka, máš hotovo!“. Lehká haptika. Série v hlavičce zůstává šedá 12.</span></li>
+        <li><span class="t">+450</span><span>Pauza, aby „hotovo“ dosedlo. Pak zdola vyjede karta (420 ms) a HP ztmavne. <span class="why">List přes HP: uživatel zůstává „doma“ a ví, že se vrátí tam, kde byl.</span></span></li>
+        <li><span class="t">+250</span><span>Na kartě se šedý plamen zapálí (B: smáčknutí 116 × 82 % a protažení, C: plné poměry podle Duolinga). Na vrcholu „2“ spadne shora na „3“ a vyjedou oranžové paprsky. <b>Haptika „úspěch“</b>, jediná za den.</span></li>
+        <li><span class="t">+400</span><span>Pátek se připojí do kapsle týdne: kapsle přestřelí o třetinu dne a vrátí se a žeton dopadne z 150 %. C: světlo přeběhne celou kapslí.</span></li>
+        <li><span class="t">+500</span><span>Jako poslední vyjede tlačítko <b>„Pokračovat“</b>. <span class="why">„Jdeme na to!“ zní po splnění dne jako začátek. Tlačítko má říct, co se stane.</span></span></li>
+        <li><span class="t">klepnutí</span><span>Karta sjede dolů (320 ms) a plamen z ní obloukem odletí do počítadla v hlavičce, kde se zmenší na velikost ikony (560 ms). Tam dopadne a série se přetočí na 13. Pak tiše naskočí pátek v liště a nabídne se Procvičování. <span class="why">Odměna přistane tam, kde ji uživatel zítra bude hledat.</span></span></li>
+      </ol>
+      <ul class="notes" style="margin-top:12px">
+        <li><b>Porovnání:</b> přepínač „Karta série“ nahoře nabízí i původní pořadí (série hned po „Výborně!“, před HP) a vypnutí.</li>
+        <li><b>Haptika v kroku 3 (B):</b> lehká na „Výborně!“, lehká při uzavření kroužku, „úspěch“ na kartě série.</li>
+        <li><b>K Figmě:</b> dny jsou anglicky (Mo, Tu…), HP česky. Pro 13 je správně „dní v řadě“, prototyp skloňuje. Na HP je pondělí zmeškané, na kartě splněné.</li>
+      </ul>
+    </details>
+
+    <details class="card" open>
+      <summary>Pravidla, která drží všechny čtyři animace</summary>
+      <ul class="notes" id="rules"></ul>
+    </details>
+
+    <details class="card">
+      <summary>Co z rešerše plyne</summary>
+      <ul class="notes" id="research"></ul>
+    </details>
+
+    <details class="card">
+      <summary>Pohybové tokeny pro vývoj</summary>
+      <table class="tok" id="tokens"></table>
+      <p class="sub" style="margin-top:10px">Pružiny jsou zadané fyzikálně (tlumení a tuhost při hmotnosti 1). V prototypu jsou přepočtené na CSS <code style="font-size:11px">linear()</code>, takže pohyb odpovídá nativní pružině.</p>
+    </details>
+
+    <details class="card">
+      <summary>Otevřené otázky</summary>
+      <ul class="notes" id="questions"></ul>
+    </details>
+  </section>
+</main>
+
+<script>
+/* ═══════════════════════ pomocníci ═══════════════════════ */
+const $=s=>document.querySelector(s);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* Pružina → CSS linear(). z = poměr tlumení, k = tuhost (hmotnost 1).
+   Dozvuk končí, když odchylka klesne pod 0,1 %. */
+function spring(z,k){
+  const w=Math.sqrt(k), f=t=>{
+    if(z<1){const wd=w*Math.sqrt(1-z*z);return 1-Math.exp(-z*w*t)*(Math.cos(wd*t)+z*w/wd*Math.sin(wd*t));}
+    return 1-Math.exp(-w*t)*(1+w*t);
+  };
+  let T=.1;for(let t=0;t<4;t+=1/480){if(Math.abs(1-f(t))>.001)T=t;}
+  const n=Math.min(90,Math.ceil(T*70)),pts=[];
+  for(let i=0;i<=n;i++)pts.push(i===n?1:+f(i/n*T).toFixed(4));
+  return {e:`linear(${pts.join(',')})`,d:Math.round(T*1000),z,k,resp:+(2*Math.PI/w).toFixed(3)};
+}
+/* Pohybové tokeny. Edoo stojí na MD3, proto pružiny z Material 3 Expressive
+   (androidx ExpressiveMotionTokens). Navíc jedna „hrdinská“ jen pro vrchol dne. */
+const S={
+  fast:spring(.6,800),   // M3 Expressive · fast spatial — pop dalšího uzlu, poskok, odznak
+  def:spring(.8,380),    // M3 Expressive · default spatial — dosednutí splněného uzlu
+  hero:spring(.5,420),   // vlastní, jen 3/3 — pumpnutí kroužku, plamen série
+};
+// čas největšího přestřelení pružiny = okamžik pro haptiku
+const peak=s=>Math.round(Math.PI/(Math.sqrt(s.k)*Math.sqrt(1-s.z*s.z))*1000);
+const E={
+  dec:'cubic-bezier(.05,.7,.1,1)',   // M3 emphasized decelerate — příchod
+  acc:'cubic-bezier(.3,0,.8,.15)',   // M3 emphasized accelerate — odchod, nádech
+  std:'cubic-bezier(.2,0,0,1)',      // M3 standard / emphasized
+  io:'cubic-bezier(.65,0,.35,1)',    // kreslení cesty
+  arrive:'cubic-bezier(.45,0,.9,.6)', // cesta dorazí s „hybností“ a ťukne do mince
+  lin:'linear'
+};
+
+/* ═══════════════════════ data z Figmy ═══════════════════════ */
+const C={y:'#FFD635',g:'#65AE39',grey:'#E1E1E1',on:'#353535',out:'#7C7C7C',orange:'#FF6904'};
+const NODES=[ // střed uzlu v rámu 400 × 908
+  {x:134,y:415,name:'Lekce'},
+  {x:326,y:497.6,name:'Slova z lekce'},
+  {x:140,y:652,name:'Denní test'},
+  {x:335.5,y:741,name:'Procvičování'},
+];
+const ICONS=[
+  `<svg width="39.39" height="24" viewBox="0 0 39.3916 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:-2.66px"><path d="M8.8 19.9998V15.8998L10.7 16.0998C11.2531 16.0691 11.7766 15.8398 12.1742 15.4539C12.5717 15.0681 12.8167 14.5518 12.864 13.9998V8.29983C12.8706 6.85918 12.3047 5.47489 11.2907 4.4515C10.2767 3.42812 8.89766 2.84946 7.457 2.84283C6.01634 2.8362 4.63206 3.40214 3.60867 4.41615C2.58529 5.43016 2.00663 6.80918 2 8.24983C2 11.0498 2.656 11.3038 3 12.7998C3.23248 13.7033 3.24243 14.6497 3.029 15.5578L2 19.9998M19.8 17.7998C21.2059 16.3938 21.9959 14.4871 21.9964 12.4989C21.997 10.5107 21.2081 8.60355 19.803 7.19678M17.0001 14.9999C17.3273 14.6728 17.5863 14.2841 17.7623 13.8562C17.9383 13.4283 18.0278 12.9698 18.0254 12.5072C18.0231 12.0445 17.9291 11.587 17.7488 11.1609C17.5685 10.7348 17.3055 10.3487 16.9751 10.0249"/><path d="M31.5914 20.1561V16.0561L29.6914 16.2561C29.1383 16.2253 28.6148 15.996 28.2172 15.6102C27.8197 15.2244 27.5747 14.708 27.5274 14.1561V8.45608C27.5208 7.01543 28.0867 5.63114 29.1007 4.60775C30.1147 3.58437 31.4937 3.00571 32.9344 2.99908C34.3751 2.99245 35.7593 3.55839 36.7827 4.5724C37.8061 5.58641 38.3848 6.96543 38.3914 8.40608C38.3914 11.2061 37.7354 11.4601 37.3914 12.9561C37.1589 13.8596 37.149 14.8059 37.3624 15.7141L38.3914 20.1561"/></svg>`,
+  `<svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M15 9.375V25.125M15 9.375C15 8.18153 14.5259 7.03693 13.682 6.19302C12.8381 5.34911 11.6935 4.875 10.5 4.875H4.875C4.57663 4.875 4.29048 4.99353 4.0795 5.2045C3.86853 5.41548 3.75 5.70163 3.75 6V20.625C3.75 20.9234 3.86853 21.2095 4.0795 21.4205C4.29048 21.6315 4.57663 21.75 4.875 21.75H11.625C12.5201 21.75 13.3786 22.1056 14.0115 22.7385C14.6444 23.3714 15 24.2299 15 25.125M15 9.375C15 8.18153 15.4741 7.03693 16.318 6.19302C17.1619 5.34911 18.3065 4.875 19.5 4.875H25.125C25.4234 4.875 25.7095 4.99353 25.9205 5.2045C26.1315 5.41548 26.25 5.70163 26.25 6V20.625C26.25 20.9234 26.1315 21.2095 25.9205 21.4205C25.7095 21.6315 25.4234 21.75 25.125 21.75H18.375C17.4799 21.75 16.6214 22.1056 15.9885 22.7385C15.3556 23.3714 15 24.2299 15 25.125M19.5 15H21.75M19.5 10.5H21.75M8.25 15H10.5M8.25 10.5H10.5"/></svg>`,
+  `<svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M18.75 2.5H11.25C10.5596 2.5 10 3.05964 10 3.75V6.25C10 6.94036 10.5596 7.5 11.25 7.5H18.75C19.4404 7.5 20 6.94036 20 6.25V3.75C20 3.05964 19.4404 2.5 18.75 2.5Z"/><path d="M20 5H22.5C23.163 5 23.7989 5.26339 24.2678 5.73223C24.7366 6.20107 25 6.83696 25 7.5V25C25 25.663 24.7366 26.2989 24.2678 26.7678C23.7989 27.2366 23.163 27.5 22.5 27.5H7.5C6.83696 27.5 6.20107 27.2366 5.73223 26.7678C5.26339 26.2989 5 25.663 5 25V7.5C5 6.83696 5.26339 6.20107 5.73223 5.73223C6.20107 5.26339 6.83696 5 7.5 5H10"/><path d="M10 13.75L14.4978 13.75"/><path d="M10 19.9815L11.1185 19.9814"/><path d="M16 20.6548L17.6414 21.875L21.4714 16.5874"/></svg>`,
+  `<svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(45deg)"><path d="M4.3122 25.6876L5.8872 24.1126M24.1122 5.88749L25.6872 4.31249M12.2997 17.7001L17.6997 12.3001M21.2952 15.864C21.7173 16.286 22.2897 16.5231 22.8865 16.5231C23.4834 16.5231 24.0558 16.286 24.4778 15.864C24.8999 15.442 25.137 14.8695 25.137 14.2727C25.137 13.6758 24.8999 13.1034 24.4778 12.6814L22.4888 10.6935C22.9109 11.1154 23.4832 11.3524 24.08 11.3522C24.3755 11.3522 24.6681 11.2939 24.941 11.1808C25.214 11.0677 25.462 10.9019 25.6709 10.6929C25.8798 10.484 26.0455 10.2359 26.1585 9.96288C26.2716 9.68987 26.3297 9.39727 26.3297 9.10179C26.3296 8.80631 26.2714 8.51373 26.1582 8.24076C26.0451 7.96779 25.8793 7.71978 25.6703 7.51088L22.4888 4.32938C22.067 3.90733 21.4947 3.67017 20.8979 3.67007C20.3012 3.66996 19.7288 3.90692 19.3068 4.32881C18.8847 4.75071 18.6476 5.32298 18.6475 5.91973C18.6474 6.51648 18.8843 7.08883 19.3062 7.51088L17.3183 5.52188C17.1094 5.3129 16.8613 5.14714 16.5882 5.03404C16.3152 4.92094 16.0226 4.86273 15.727 4.86273C15.4315 4.86273 15.1389 4.92094 14.8658 5.03404C14.5928 5.14714 14.3447 5.3129 14.1357 5.52188C13.9267 5.73085 13.761 5.97894 13.6479 6.25198C13.5348 6.52501 13.4766 6.81765 13.4766 7.11319C13.4766 7.40872 13.5348 7.70136 13.6479 7.9744C13.761 8.24744 13.9267 8.49553 14.1357 8.7045L21.2952 15.864ZM7.51058 25.6705C7.93247 26.0925 8.50474 26.3297 9.10149 26.3298C9.39698 26.3299 9.68957 26.2717 9.96258 26.1587C10.2356 26.0457 10.4837 25.88 10.6926 25.6711C10.9016 25.4622 11.0674 25.2142 11.1805 24.9412C11.2936 24.6682 11.3519 24.3756 11.3519 24.0802C11.352 23.7847 11.2939 23.4921 11.1808 23.2191C11.0678 22.9461 10.9021 22.698 10.6932 22.489L12.6811 24.478C13.1031 24.9 13.6755 25.1371 14.2724 25.1371C14.8692 25.1371 15.4417 24.9 15.8637 24.478C16.2857 24.056 16.5228 23.4836 16.5228 22.8867C16.5228 22.2898 16.2857 21.7174 15.8637 21.2954L8.7042 14.1359C8.49523 13.9269 8.24714 13.7611 7.9741 13.648C7.70107 13.5349 7.40843 13.4767 7.11289 13.4767C6.81736 13.4767 6.52472 13.5349 6.25168 13.648C5.97864 13.7611 5.73055 13.9269 5.52158 14.1359C5.3126 14.3449 5.14684 14.5929 5.03374 14.866C4.92065 15.139 4.86244 15.4317 4.86244 15.7272C4.86244 16.0227 4.92065 16.3154 5.03374 16.5884C5.14684 16.8614 5.3126 17.1095 5.52158 17.3185L7.51058 19.3064C7.08854 18.8845 6.51618 18.6475 5.91943 18.6476C5.32268 18.6477 4.75041 18.8849 4.32852 19.3069C3.90662 19.729 3.66967 20.3013 3.66977 20.8981C3.66988 21.4948 3.90704 22.0671 4.32908 22.489L7.51058 25.6705Z"/></svg>`,
+];
+const PATHS={
+  A:'M2.51362 1.5002C2.51362 1.5002 -3.37101 41.486 13.0543 56.8776C26.3441 69.331 53.7485 74.3387 73.1231 64.9324C91.2467 56.1333 97.4929 42.7607 117.385 38.7543C129.466 36.321 149.001 38.7543 149.001 38.7543',
+  B:'M147.408 1.50023C147.408 1.50023 154.603 45.2887 139.167 63.4275C121.378 84.3302 98.7447 66.7764 75.8417 78.1924C61.0293 85.5756 52.0355 94.0123 37.1791 101.264C23.9582 107.717 1.50016 110.544 1.50016 110.544'
+};
+const TXT=[
+  {t:'Pojďme na to!',b:'Dnes vás čekají 3 úkoly. Začněte lekcí.',when:1},
+  {t:'Dobrý začátek!',b:'Máte za sebou první úkol, ještě dva zbývají.'},
+  {t:'Skoro hotovo!',b:'Zbývá dokončit denní test.'},
+  {t:'Pecka, máš hotovo!',b:'Všechny dnešní úkoly jsou splněné. <b style="font-weight:700">Zítra ve 12:30</b> vás čeká další lekce'},
+];
+const SUCC=[ // popis pod „Výborně!“ podle kroku (vykání, fakta)
+  'Lekce je za vámi. Dnes jsme spolu 7 minut mluvili o cestování.',
+  'Prošli jste 12 nových slov z dnešní lekce.',
+  'Denní test máte hotový, 8 z 10 odpovědí bylo správně.',
+  'Procvičili jste 10 slovíček navíc.',
+];
+// paprsky obrazovky série: stejné klíny, oranžová (#FFA66A u středu → průhledná žlutá na konci)
+(()=>{
+  const g=[[194,23],[314,21.5]],R=document.getElementById('kRays');
+  let h='<defs>'+g.map(([L,r],k)=>`<linearGradient id="kg${k}" x1="0" y1="${-r}" x2="0" y2="${-(r+L)}" gradientUnits="userSpaceOnUse"><stop stop-color="#FFA66A"/><stop offset="1" stop-color="#FFD635" stop-opacity="0"/></linearGradient>`).join('')+'</defs><g transform="translate(200 290)">';
+  for(let a=0;a<360;a+=45){const k=(a%180===90)?0:1,[L,r]=g[k];
+    h+=`<path transform="rotate(${a})" opacity=".12" fill="url(#kg${k})" d="M-20.39 ${-r}H20.39L31.5 ${-(r+L)}H-31.5Z"/>`;}
+  R.innerHTML=h+'</g>';
+})();
+// paprsky za odznakem: 8 klínů (63 → 40,8 px), zelená 12 % u středu → 0 na konci, jako ve Figmě
+(()=>{
+  const g=[[194,23],[314,21.5]],R=document.getElementById('sRays');
+  let h='<defs>'+g.map(([L,r],k)=>`<linearGradient id="sg${k}" x1="0" y1="${-r}" x2="0" y2="${-(r+L)}" gradientUnits="userSpaceOnUse"><stop stop-color="#65AE39"/><stop offset="1" stop-color="#65AE39" stop-opacity="0"/></linearGradient>`).join('')+'</defs><g transform="translate(200 280.5)">';
+  for(let a=0;a<360;a+=45){const k=(a%180===90)?0:1,[L,r]=g[k];
+    h+=`<path transform="rotate(${a})" opacity=".12" fill="url(#sg${k})" d="M-20.39 ${-r}H20.39L31.5 ${-(r+L)}H-31.5Z"/>`;}
+  R.innerHTML=h+'</g>';
+})();
+
+/* ═══════════════════════ sestavení HP ═══════════════════════ */
+const N=[];
+NODES.forEach((d,i)=>{
+  const el=document.createElement('div');
+  el.className='node';el.style.left=d.x+'px';el.style.top=d.y+'px';
+  el.innerHTML=`<span class="nshadow"></span><div class="hop"><div class="bob"><span class="halo"></span><span class="core"><span class="fill"></span><span class="ico">${ICONS[i]}</span></span></div></div><span class="ripple"></span>`;
+  $('#nodes').appendChild(el);
+  N.push({el,hop:el.querySelector('.hop'),bob:el.querySelector('.bob'),halo:el.querySelector('.halo'),core:el.querySelector('.core'),fill:el.querySelector('.fill'),ico:el.querySelector('.ico'),rip:el.querySelector('.ripple'),shadow:el.querySelector('.nshadow'),...d});
+});
+const SEG={};
+['A','B'].forEach(k=>{
+  const s=$('#seg'+k);
+  s.innerHTML=`<defs>
+      <mask id="m${k}y" maskUnits="userSpaceOnUse" x="-20" y="-20" width="200" height="160"><path d="${PATHS[k]}" stroke="#fff" stroke-width="12" fill="none" pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="1"/></mask>
+      <mask id="m${k}g" maskUnits="userSpaceOnUse" x="-20" y="-20" width="200" height="160"><path d="${PATHS[k]}" stroke="#fff" stroke-width="12" fill="none" pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="1"/></mask>
+      <mask id="m${k}s" maskUnits="userSpaceOnUse" x="-20" y="-20" width="200" height="160"><path d="${PATHS[k]}" stroke="#fff" stroke-width="12" fill="none" pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="1"/></mask>
+    </defs>
+    <path class="base" d="${PATHS[k]}" stroke="${C.grey}" stroke-width="3" stroke-linecap="round" stroke-dasharray="6 6"/>
+    <path class="y" d="${PATHS[k]}" stroke="${C.y}" stroke-width="3" stroke-linecap="round" stroke-dasharray="6 6" mask="url(#m${k}y)"/>
+    <path class="g" d="${PATHS[k]}" stroke="${C.g}" stroke-width="3" stroke-linecap="round" stroke-dasharray="6 6" mask="url(#m${k}g)"/>
+    <path class="gs" d="${PATHS[k]}" stroke="${C.g}" stroke-width="3" stroke-linecap="round" mask="url(#m${k}s)"/>`;
+  SEG[k]={svg:s,base:s.querySelector('.base'),y:s.querySelector('.y'),g:s.querySelector('.g'),gs:s.querySelector('.gs'),my:s.querySelector(`#m${k}y path`),mg:s.querySelector(`#m${k}g path`),ms:s.querySelector(`#m${k}s path`)};
+});
+
+function txtLayer(i){
+  const d=TXT[i],ly=document.createElement('div');ly.className='ly';
+  ly.innerHTML=`<p class="t-tl-m">${d.t}</p><p class="t-bm c-var">${d.b}</p>`+
+    (d.when?`<p class="when t-bm"><svg width="16" height="16"><use href="#i-phone-talk"/></svg><span>naplánováno na</span><b>12:30</b></p>`:'');
+  return ly;
+}
+function setRoll(el,vals){el.innerHTML=`<span>${vals.map(v=>`<span>${v}</span>`).join('')}</span>`;}
+
+/* Statický stav: n = počet splněných kroků (0–4) */
+let state=0;
+function render(n,{streak=true}={}){
+  state=n;
+  N.forEach((d,i)=>{
+    const k=i+1;
+    d.el.classList.toggle('is-done',k<=n);
+    d.el.classList.toggle('is-active',k===n+1&&(k<4||streak));
+    d.fill.style.background='';
+  });
+  const segState=(k,from)=>n>=from+1?'g':n===from?'y':'0';
+  [['A',1],['B',2]].forEach(([k,f])=>{
+    const s=segState(k,f);
+    SEG[k].my.style.strokeDashoffset=(s==='y'||s==='g')?0:1;
+    SEG[k].mg.style.strokeDashoffset=(s==='g'&&PATHMODE!=='draw')?0:1; // u „dokreslí se“ zelené čárky nejsou potřeba
+    SEG[k].ms.style.strokeDashoffset=(s==='g'&&PATHMODE!=='dashed')?0:1;
+  });
+  const p=Math.min(n,3);
+  const arc=$('#arc');
+  arc.setAttribute('stroke-dashoffset',100-p/3*100);
+  arc.setAttribute('stroke',p===3?C.g:C.y);
+  arc.style.opacity=p?1:0;
+  setRoll($('#ringNum'),[p]);
+  const t=$('#dtxt');t.innerHTML='';t.appendChild(txtLayer(p));
+  const lit=n>=3&&streak;
+  $('#hdrFire .lit').style.opacity=lit?1:0;
+  $('#hdrFire .dim').style.opacity=lit?0:1;
+  setRoll($('#streakNum'),[lit?13:12]);
+  $('#streakNum').style.color=lit?'var(--streak-num)':'var(--on-var)';
+  $('#today .dash').style.opacity=lit?0:1;
+  $('#today .lit').style.opacity=lit?1:0;
+  $('#banner').classList.toggle('on',n===2);
+  $('#badge').classList.toggle('on',n===2);
+}
+
+/* ═══════════════════════ časová osa ═══════════════════════ */
+let reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function ctx(){return {tracks:[],events:[],temp:[],focus:[]};}
+/* A(): jedna animace jedné vlastnosti jednoho prvku.
+   steps = [[trvání, cílové hodnoty, křivka], …] — křivka platí pro daný úsek. */
+function A(c,row,label,el,from,steps,t0,o={}){
+  const T=steps.reduce((s,x)=>s+x[0],0)||1;
+  const kf=[{...from,offset:0,easing:steps[0][2]}];let acc=0;
+  steps.forEach((st,i)=>{acc+=st[0];const k={...st[1],offset:Math.min(1,acc/T)};if(i+1<steps.length)k.easing=steps[i+1][2];kf.push(k);});
+  const kind=o.kind||(steps.some(s=>String(s[2]).startsWith('linear('))?'spring':'ease');
+  c.tracks.push({row,label,el,kf,t0:t0+(c.off||0),T,iter:o.iter||1,kind,hide:o.hide});
+}
+const ev=(c,t,type,v,label)=>c.events.push({t:t+(c.off||0),type,v,label});
+
+/* ── varianty intenzity ──
+   Všechny tři mají stejnou kostru (stav se mění stejně), liší se jen „kořením“:
+   amplitudou, počtem ohnisek, částicemi a počtem haptických impulzů. */
+const VAR={
+  A:{key:'A',name:'Klidná',sub:'Jen změna stavu. Bez přestřelení, částic a putování odměn.',
+     press:1,pop:1,iconAmp:null,rays:0,ringRays:0,diamonds:0,confetti:0,wave:0,march:0,pulses:0,pulses3:0,numPop:0,
+     trail:0,flame:'fade',day:'fade',ringPump:1,ringStroke:0,wiggle:0,nextBreath:0},
+  B:{key:'B',name:'Vyvážená',sub:'Jedno ohnisko na krok, jemné přestřelení, záblesk jen u uzavření dne.',
+     press:.93,pop:1.03,swap:1,iconAmp:[.92,1.06],rays:0,ringRays:1,diamonds:0,confetti:0,wave:0,march:0,pulses:1,pulses3:0,numPop:1.08,
+     trail:0,flame:'soft',day:'pop',ringPump:1.06,ringStroke:1,wiggle:0,nextBreath:1.035},
+  C:{key:'C',name:'Výrazná',sub:'Plná show: záblesky, konfety, vlna, plamínek k sérii. Jen na milníky série.',
+     press:.88,pop:1.06,iconAmp:[.82,1.14],rays:1,ringRays:3,diamonds:1,confetti:8,wave:1,march:1,pulses:2,pulses3:1,numPop:1.16,
+     trail:1,flame:'full',day:'flip',ringPump:1.1,ringStroke:1,wiggle:1,nextBreath:1.07},
+};
+let P=VAR.B;
+let NODEMODE='coin';
+const COIN=()=>NODEMODE==='coin';
+/* Odkud k uzlu přijíždí cesta: z konce cesty (posledních 10 px) se spočítá směr.
+   Vodorovný příjezd → otočení kolem svislé osy, svislý → kolem vodorovné. Hrana na straně
+   příjezdu „ucukne“ dozadu, mince se překlopí ve směru, kterým cesta jela. */
+function arrivalDir(k){
+  const p=SEG[k].base,L=p.getTotalLength(),a=p.getPointAtLength(L-10),b=p.getPointAtLength(L);
+  const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;
+  if(Math.abs(dx)>=Math.abs(dy))return {axis:'Y',sgn:dx>0?-1:1,px:dx/len,py:dy/len,side:dx>0?'zleva':'zprava'};
+  return {axis:'X',sgn:dy>0?1:-1,px:dx/len,py:dy/len,side:dy>0?'shora':'zdola'};
+} // splnění uzlu: 'press' = zmáčknutí a výskok, 'coin' = otočení mince (návrh)
+
+/* ── stavební kameny ── */
+// Ohnisko = místo, kam se v daném okamžiku má podívat oko. Z nich se počítá dráha oka.
+const focus=(c,t,name,x,y)=>c.focus.push({t:t+(c.off||0),name,x,y});
+/* Splnění uzlu, podle uzlu na cestě Duolinga (měřeno po snímcích): svatozář se vsákne,
+   uzel se zmáčkne a vyskočí, ikona dobíhá o 40 ms. Amplitudy určuje varianta. Vrchol = 250 ms. */
+function nodeDone(c,i,t0,{rayN=8,from=null}={}){
+  const n=N[i],R=reduce,row='Uzel '+(i+1);
+  n.fill.style.background=C.g;
+  focus(c,t0,row,n.x,n.y);
+  if(R){
+    A(c,row,'zezelená (prolnutí)',n.fill,{transform:'scale(1)',opacity:0},[[240,{transform:'scale(1)',opacity:1},E.lin]],t0);
+    A(c,row,'',n.ico,{color:C.on},[[240,{color:'#fff'},E.lin]],t0,{hide:1});
+    A(c,row,'',n.halo,{opacity:1},[[200,{opacity:0},E.lin]],t0,{hide:1});
+    return t0+240;
+  }
+  if(NODEMODE==='coin'&&P.key!=='A'){
+    /* Otočení mince (návrh): uzel vyskočí, otočí se kolem svislé osy o 180° (žlutý líc → zelený rub)
+       a dopadne s malým smáčknutím. Druhá půlka jde z −84° do 0°, aby ikona nebyla zrcadlově. */
+    const d=from||{axis:'Y',sgn:-1,px:0,py:0,side:''},rot=a=>d.axis==='Y'?`rotateY(${a}deg)`:`rotateX(${a}deg)`;
+    const lift=P.key==='C'?1.1:1.07,push=P.key==='C'?5:3,land=P.key==='C'?.93:.95;
+    // kratší perspektiva (300 px): bližší hrana je znatelně větší, takže je vidět, odkud se mince otáčí
+    const T=(k,a,s)=>({transform:`perspective(300px) translate(${(d.px*push*k).toFixed(2)}px,${(d.py*push*k).toFixed(2)}px) ${rot(a)} scale(${s})`});
+    A(c,row,'svatozář se vsákne',n.halo,{opacity:1,transform:'scale(1)'},[[90,{opacity:0,transform:'scale(.84)'},E.acc]],t0);
+    A(c,row,`otočení mince${d.side?' od strany příjezdu ('+d.side+')':''}`,n.bob,T(0,0,1),[[170,T(1,d.sgn*84,lift),E.acc],[1,T(1,-d.sgn*84,lift),E.lin],[204,T(0,0,1),E.io],[70,T(0,0,land),E.dec],[S.def.d,T(0,0,1),S.def.e]],t0);
+    A(c,row,'',n.fill,{transform:'scale(1)',opacity:0},[[170,{transform:'scale(1)',opacity:0},E.lin],[1,{transform:'scale(1)',opacity:1},E.lin]],t0,{hide:1});
+    A(c,row,'',n.ico,{color:C.on},[[170,{color:C.on},E.lin],[1,{color:'#fff'},E.lin]],t0,{hide:1});
+    A(c,row,'',n.core,{filter:'brightness(1)'},[[150,{filter:'brightness(.86)'},E.lin],[40,{filter:'brightness(.86)'},E.lin],[150,{filter:'brightness(1)'},E.lin]],t0+20,{hide:1}); // hrana mince ztmavne
+    if(P.rays)rays(c,n.x,n.y,t0+360,{n:rayN,r0:47,len:12,rot:i*11,label:`záblesk (${rayN} paprsků)`});
+    return t0+375; // dopad mince = haptika a zvuk
+  }
+  A(c,row,P.press<1?'svatozář se vsákne':'svatozář zmizí',n.halo,{opacity:1,transform:'scale(1)'},[[P.press<1?90:160,{opacity:0,transform:P.press<1?'scale(.84)':'scale(1)'},E.acc]],t0,{hide:P.press<1?0:1});
+  if(P.swap){
+    // Duolingo: stav se přepne v jednom snímku na dně zmáčknutí, „šťáva“ je kolem přepnutí, ne v prolínání
+    A(c,row,`zmáčknutí ${Math.round(P.press*100)} % → výskok ${Math.round(P.pop*100)} % → dosednutí`,n.bob,{transform:'scale(1)'},[[110,{transform:`scale(${P.press})`},E.acc],[140,{transform:`scale(${P.pop})`},E.dec],[S.def.d,{transform:'scale(1)'},S.def.e]],t0);
+    A(c,row,'zezelená v jednom snímku na dně',n.fill,{transform:'scale(1)',opacity:0},[[125,{transform:'scale(1)',opacity:0},E.lin],[1,{transform:'scale(1)',opacity:1},E.lin]],t0);
+    A(c,row,'',n.ico,{color:C.on},[[125,{color:C.on},E.lin],[1,{color:'#fff'},E.lin]],t0,{hide:1});
+  }else{
+    if(P.press<1)A(c,row,`zmáčknutí ${Math.round(P.press*100)} % → výskok ${Math.round(P.pop*100)} % → dosednutí`,n.bob,{transform:'scale(1)'},[[100,{transform:`scale(${P.press})`},E.acc],[150,{transform:`scale(${P.pop})`},E.dec],[S.def.d,{transform:'scale(1)'},S.def.e]],t0);
+    A(c,row,'zelená výplň od středu',n.fill,{transform:'scale(0)'},[[P.press<1?220:260,{transform:'scale(1)'},E.dec]],t0+(P.press<1?40:0));
+    A(c,row,'',n.ico,{color:C.on},[[120,{color:'#fff'},E.lin]],t0+(P.press<1?140:110),{hide:1});
+  }
+  if(P.iconAmp)A(c,row,'ikona dobíhá o 40 ms',n.ico,{transform:'scale(1)'},[[100,{transform:`scale(${P.iconAmp[0]})`},E.acc],[190,{transform:`scale(${P.iconAmp[1]})`},E.dec],[S.fast.d,{transform:'scale(1)'},S.fast.e]],t0);
+  if(P.rays)rays(c,n.x,n.y,t0+230,{n:rayN,r0:47,len:12,rot:i*11,label:`záblesk (${rayN} paprsků)`});
+  return t0+(P.swap?125:250); // B: haptika a první tón na dopad (přepnutí), druhý tón na vrchol výskoku
+}
+/* Aktivace dalšího uzlu: (nádech nahoru), žlutá výplň, svatozář vyroste z uzlu, (pozvání). */
+function nodeNext(c,i,t0,{pulses=P.pulses,quiet=false}={}){
+  const n=N[i],R=reduce,row='Další uzel';
+  n.fill.style.background=C.y;
+  // tichá aktivace (prolnutí) oko nepřitahuje, proto se nepočítá jako zastávka
+  if(R||!P.nextBreath||quiet){
+    A(c,row,R?'zežloutne (prolnutí)':'zežloutne, svatozář se objeví',n.fill,{transform:'scale(1)',opacity:0},[[240,{transform:'scale(1)',opacity:1},E.lin]],t0);
+    A(c,row,'',n.ico,{color:C.out},[[240,{color:C.on},E.lin]],t0,{hide:1});
+    A(c,row,'',n.halo,{opacity:0},[[240,{opacity:1},E.lin]],t0+(R?0:120),{hide:1});
+    return t0+240;
+  }
+  focus(c,t0,row,n.x,n.y);
+  const b=P.nextBreath;
+  A(c,row,`nádech ${Math.round(b*1000)/10} % → pop`,n.bob,{transform:'scale(1)'},[[130,{transform:`scale(${b})`},E.dec],[70,{transform:`scale(${(2-b).toFixed(3)})`},E.acc],[S.fast.d,{transform:'scale(1)'},S.fast.e]],t0);
+  A(c,row,'žlutá výplň',n.fill,{transform:'scale(0)'},[[240,{transform:'scale(1)'},E.dec]],t0+40);
+  A(c,row,'',n.ico,{color:C.out},[[150,{color:C.on},E.lin]],t0+100,{hide:1});
+  // průhlednost se při přestřelení ořízne na 1, přestřeluje jen velikost
+  A(c,row,'svatozář vyroste z uzlu',n.halo,{opacity:0,transform:'scale(.84)'},[[S.fast.d,{opacity:1,transform:'scale(1)'},S.fast.e]],t0+200);
+  if(pulses){
+    n.rip.style.borderColor='rgba(255,214,53,.85)';
+    A(c,row,'pozvání ×'+pulses,n.rip,{transform:'scale(1)',opacity:0},[[1,{transform:'scale(1)',opacity:.6},E.lin],[1100,{transform:'scale(1.34)',opacity:0},E.dec]],t0+800,{iter:pulses});
+  }
+  return t0+130;
+}
+/* Odkrytí Procvičování — hravá verze: šedý uzel se zatřese (něco se dere ven), zamáčkne se do země,
+   vystřelí nahoru a ve vzduchu se jednou otočí zleva doprava jako mince (šedý líc → žlutý rub,
+   mezi nimi se mihne hrana). Pak „žuchne“: rozplácne se a odpruží, ze země vyletí obláčky prachu
+   a obrazovka se krátce otřese. Plochý stín na zemi ukazuje výšku. Vrací okamžik dopadu. */
+function nodeEmerge(c,i,t0){
+  const n=N[i],row='Další uzel';
+  if(reduce||P.key==='A')return nodeNext(c,i,t0,{pulses:0,quiet:true});
+  focus(c,t0,row,n.x,n.y);
+  const big=P.key==='C',H=big?44:34,UP=big?1.24:1.18,SH=big?5:3;
+  const tq=180,sq=100,up=220,dn=220,imp=t0+tq+sq+up+dn,tEnd=imp+160+S.def.d;
+  // dočasná mince se dvěma líci a hranou (po dopadu ji vystřídá skutečný uzel ve stejné poloze)
+  // průhlednost jde na obal: animovaná opacity by 3D minci zploštila a místo rubu by byl vidět zrcadlový líc
+  const wrap=document.createElement('span');wrap.className='coinw';
+  wrap.innerHTML=`<span class="coin3d"><span class="f front">${ICONS[i]}</span><span class="f back">${ICONS[i]}</span><span class="edge"></span></span>`;
+  n.bob.appendChild(wrap);c.temp.push(wrap);const coin=wrap.firstElementChild;
+  // skutečný uzel musí pod mincí už vypadat jako aktivní (žlutá výplň), jinak po výměně probleskne šedý.
+  // Výměna bez prolnutí: uzel se ukáže o 2 ms dřív, než mince zmizí, takže nikdy nejsou oba napůl průhledné.
+  n.fill.style.background=C.y;
+  A(c,row,'',n.core,{opacity:0},[[tEnd,{opacity:0},E.lin],[1,{opacity:1},E.lin]],0,{hide:1});
+  A(c,row,'',n.fill,{transform:'scale(1)',opacity:1},[[1,{transform:'scale(1)',opacity:1},E.lin]],0,{hide:1});
+  A(c,row,'',n.ico,{color:C.on},[[1,{color:C.on},E.lin]],0,{hide:1});
+  A(c,row,'',wrap,{opacity:1},[[tEnd+2,{opacity:1},E.lin],[1,{opacity:0},E.lin]],0,{hide:1});
+  // tělo: třes → zamáčknutí → výskok → pád → rozplácnutí → odpružení → dosednutí
+  const B=(y,z,sx,sy=sx)=>({transform:`translateY(${y}px) rotate(${z}deg) scale(${sx},${sy})`});
+  A(c,row,'zatřese se, zamáčkne, vystřelí, žuchne',n.bob,B(0,0,1),[
+    [45,B(0,-5,.99),E.std],[45,B(0,5,.99),E.std],[45,B(0,-3,.99),E.std],[45,B(0,0,1),E.std],
+    [sq,B(4,0,1.1,.82),E.acc],
+    [up,B(-H,0,UP),E.dec],[dn,B(0,0,1),E.acc],
+    [60,B(5,0,1.26,.7),E.dec],[100,B(-3,0,.94,1.1),E.dec],[S.def.d,B(0,0,1),S.def.e]],t0);
+  // mince se ve vzduchu otočí jednou o 180° zleva doprava (šedý líc → žlutý rub) a dotočí se před dopadem,
+  // aby žuchla naplocho. 540° bylo moc (Aleš, 12. 10.).
+  A(c,row,'otočení 180° zleva doprava',coin,{transform:'perspective(420px) rotateY(0deg)'},[[tq+sq+30,{transform:'perspective(420px) rotateY(0deg)'},E.lin],[up+dn-90,{transform:'perspective(420px) rotateY(180deg)'},E.io],[60,{transform:'perspective(420px) rotateY(180deg)'},E.lin]],t0);
+  // stín na zemi: při výskoku se zmenší a zesvětlí, při pádu naroste, při dopadu zmizí pod uzlem
+  A(c,row,'stín na zemi',n.shadow,{opacity:0,transform:'scale(1)'},[[tq+sq,{opacity:.05,transform:'scale(1.05)'},E.lin],[up,{opacity:.06,transform:'scale(.5)'},E.dec],[dn,{opacity:.16,transform:'scale(1.05)'},E.acc],[200,{opacity:0,transform:'scale(1.2)'},E.lin]],t0,{hide:1});
+  // žuchnutí: prach ze země, otřes obrazovky, vlnka
+  dust(c,n,imp,{n:big?10:8,dist:big?[30,60]:[22,44]});
+  A(c,'Otřes','obrazovka se otřese',$('#hp'),{transform:'translateY(0)'},[[50,{transform:`translateY(${SH}px)`},E.dec],[60,{transform:`translateY(${-SH*.7}px)`},E.std],[60,{transform:`translateY(${SH*.4}px)`},E.std],[70,{transform:'translateY(0)'},E.std]],imp);
+  n.rip.style.borderColor='rgba(255,214,53,.85)';
+  A(c,row,'vlnka na zemi',n.rip,{transform:'scale(.95)',opacity:0},[[1,{transform:'scale(.95)',opacity:.5},E.lin],[520,{transform:'scale(1.4)',opacity:0},E.dec]],imp);
+  A(c,row,'svatozář po dopadu',n.halo,{opacity:0,transform:'scale(.84)'},[[S.fast.d,{opacity:1,transform:'scale(1)'},S.fast.e]],imp+180);
+  ev(c,imp,'h','medium','Procvičování žuchlo');ev(c,imp,'s','thud','žuchnutí');
+  return imp;
+}
+// Obláčky prachu při dopadu: plochá světle šedá kolečka vyletí do stran po zemi a rozplynou se
+function dust(c,n,t0,{n:cnt=8,dist=[24,46]}={}){
+  if(reduce)return;
+  for(let k=0;k<cnt;k++){
+    const p=document.createElement('span');p.className='puff';
+    const side=k%2?1:-1,j=Math.floor(k/2),sz=14+((k*7)%3)*4;
+    p.style.cssText+=`width:${sz}px;height:${sz}px;background:${k%3?'#E0E0E0':'#D2D2D2'}`;
+    n.el.appendChild(p);c.temp.push(p); // před mincí: prach se zvedá u paty uzlu
+    const dx=side*(dist[0]+(dist[1]-dist[0])*(j/Math.max(1,cnt/2-1))),dy=-(3+j*4),x0=48+side*(26+j*3),y0=86+(j%2)*3;
+    const T=(x,y,s)=>`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-50%) scale(${s})`;
+    A(c,'Částice',k?'':'prach ze země',p,{transform:T(x0,y0,.3),opacity:0},[[1,{transform:T(x0,y0,.3),opacity:1},E.lin],[260,{transform:T(x0+dx*.75,y0+dy*.6,1),opacity:1},E.dec],[360,{transform:T(x0+dx,y0+dy,1.25),opacity:0},E.lin]],t0+j*25,{kind:'fx',hide:k>0});
+  }
+}
+// Cesta: barva se „nalije“ od uzlu k uzlu (C: žlutá navíc krátce teče k cíli)
+/* Hotová cesta jako plná čára (návrh): plná = prošlá cesta, žlutá čárkovaná = kudy dál,
+   šedá čárkovaná = co čeká. draw = plná čára se dokreslí přes čárky; zip = nejdřív zelené
+   čárky, 160 ms za nimi se mezery zacvaknou do plné čáry. */
+let PATHMODE='draw';
+function pathFill(c,k,col,t0,d,ease=E.io){
+  const s=SEG[k],R=reduce,m=col==='y'?s.my:s.mg,p=col==='y'?s.y:s.g;
+  if(col==='g'&&PATHMODE!=='dashed'){
+    if(R){
+      A(c,'Cesta','plná čára (prolnutí)',s.gs,{opacity:0},[[240,{opacity:1},E.lin]],t0);
+      A(c,'Cesta','',s.ms,{strokeDashoffset:0},[[1,{strokeDashoffset:0},E.lin]],t0,{hide:1});
+      return;
+    }
+    if(PATHMODE==='draw'){A(c,'Cesta','plná čára se dokreslí',s.ms,{strokeDashoffset:1},[[d,{strokeDashoffset:0},ease]],t0);return;}
+    A(c,'Cesta','zelené čárky',s.mg,{strokeDashoffset:1},[[d,{strokeDashoffset:0},ease]],t0);
+    A(c,'Cesta','mezery se zacvaknou',s.ms,{strokeDashoffset:1},[[d,{strokeDashoffset:0},ease]],t0+160);
+    return;
+  }
+  if(R){
+    A(c,'Cesta','prolnutí',p,{opacity:0},[[240,{opacity:1},E.lin]],t0);
+    A(c,'Cesta','',m,{strokeDashoffset:0},[[1,{strokeDashoffset:0},E.lin]],t0,{hide:1});
+    return;
+  }
+  A(c,'Cesta',col==='y'?'žlutá k dalšímu kroku':'zelená',m,{strokeDashoffset:1},[[d,{strokeDashoffset:0},ease]],t0);
+  if(col==='y'&&P.march) A(c,'Cesta','čárky tečou k cíli',p,{strokeDashoffset:0},[[1200,{strokeDashoffset:-36},E.lin]],t0,{kind:'ease'});
+}
+// Kroužek dne + číslo
+function ringTo(c,from,to,t0,d=500,ease=E.std){
+  const arc=$('#arc'),o=v=>100-v/3*100;
+  A(c,'Kroužek dne',`oblouk ${from}/3 → ${to}/3`,arc,{strokeDashoffset:o(from),opacity:from?1:0},[[1,{strokeDashoffset:o(from),opacity:1},E.lin],[reduce?240:d,{strokeDashoffset:o(to),opacity:1},reduce?E.lin:ease]],t0);
+}
+// Číslo se přetočí jako počítadlo; volitelně při dopadu „ťukne“
+/* Počítadlo jako v Duolingu: přetočí se jen změněná číslice. Stará vyjede dolů, nová
+   spadne shora za 120 ms, o pixel podklesne a vrátí se. Ťuknutí (pop) sedí na dopad. */
+function rollNum(c,el,from,to,t0,row,{pop=null,popAt=120}={}){
+  const f=String(from),t=String(to);let k=0;while(k<f.length&&k<t.length&&f[k]===t[k])k++;
+  el.innerHTML=`<span class="rp">${t.slice(0,k)}</span><span class="rd"><span>${t.slice(k)}</span><span>${f.slice(k)}</span></span>`;
+  const h=el.getBoundingClientRect().height/(fitScale||1),inner=el.querySelector('.rd');
+  if(reduce){A(c,row,'číslo (prolnutí)',inner,{transform:`translateY(-${h}px)`,opacity:1},[[110,{transform:`translateY(-${h}px)`,opacity:0},E.lin],[1,{transform:'translateY(0)',opacity:0},E.lin],[110,{transform:'translateY(0)',opacity:1},E.lin]],t0);return;}
+  A(c,row,`${from} → ${to}`,inner,{transform:`translateY(-${h}px)`},[[120,{transform:'translateY(1px)'},E.acc],[60,{transform:'translateY(0)'},E.dec]],t0);
+  if(pop&&P.numPop)A(c,row,'',pop,{transform:'scale(1)'},[[90,{transform:`scale(${P.numPop})`},E.dec],[S.fast.d,{transform:'scale(1)'},S.fast.e]],t0+popAt-90,{hide:1});
+}
+function textTo(c,i,t0){
+  const box=$('#dtxt'),old=box.firstElementChild,nw=txtLayer(i);
+  nw.style.opacity=0;box.appendChild(nw);
+  A(c,'Text','odchod',old,{opacity:1,transform:'translateY(0)'},[[150,{opacity:0,transform:reduce?'translateY(0)':'translateY(-4px)'},E.acc]],t0);
+  A(c,'Text','příchod nového textu',nw,{opacity:0,transform:reduce?'translateY(0)':'translateY(6px)'},[[280,{opacity:1,transform:'translateY(0)'},E.dec]],t0+150);
+}
+/* Záblesk — paprsky jako „starbursty“ Duolinga: vyrazí od středu ven, chvíli drží
+   a smažou se směrem ven. Delší a kratší paprsky se střídají. Čistě plochý tah. */
+function rays(c,x,y,t0,{n=8,r0=46,len=12,w=2.5,cols=[C.y,C.g],rot=0,label='záblesk',hide=false}={}){
+  if(reduce)return;
+  const R=r0+len+4,ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
+  svg.setAttribute('class','burst');svg.setAttribute('width',2*R);svg.setAttribute('height',2*R);svg.setAttribute('viewBox',`${-R} ${-R} ${2*R} ${2*R}`);
+  svg.style.left=(x-R)+'px';svg.style.top=(y-R)+'px';
+  $('#fx').appendChild(svg);c.temp.push(svg);
+  for(let k=0;k<n;k++){
+    const a=(rot-90+k*360/n)*Math.PI/180,L=k%2?len*.62:len,l=document.createElementNS(ns,'line');
+    l.setAttribute('x1',(Math.cos(a)*r0).toFixed(2));l.setAttribute('y1',(Math.sin(a)*r0).toFixed(2));
+    l.setAttribute('x2',(Math.cos(a)*(r0+L)).toFixed(2));l.setAttribute('y2',(Math.sin(a)*(r0+L)).toFixed(2));
+    l.setAttribute('stroke',cols[k%cols.length]);l.setAttribute('stroke-width',w);l.setAttribute('stroke-linecap','round');
+    l.setAttribute('pathLength','1');l.setAttribute('stroke-dasharray','1 1');
+    svg.appendChild(l);
+    A(c,'Částice',k?'':label,l,{strokeDashoffset:1,opacity:0},[[1,{strokeDashoffset:1,opacity:1},E.lin],[150,{strokeDashoffset:0,opacity:1},E.dec],[70,{strokeDashoffset:0,opacity:1},E.lin],[230,{strokeDashoffset:-1,opacity:1},E.acc],[1,{strokeDashoffset:-1,opacity:0},E.lin]],t0,{kind:'fx',hide:hide||k>0});
+  }
+}
+/* Kosočtverečky — jako jiskřičky kolem uzlu v Duolingu: objeví se, pomalu
+   odplují ven a zmenší se do ztracena. Žádný výbuch. */
+function diamonds(c,x,y,t0,{n=3,r=50,drift=16,size=6,cols=[C.y,C.g],rot=-60,lemon=false,label='kosočtverečky'}={}){
+  if(reduce)return;
+  for(let k=0;k<n;k++){
+    const a=(rot+k*360/n+(k%2?18:-12))*Math.PI/180,p=document.createElement('span');p.className='pt';
+    if(lemon&&k===0)p.innerHTML=LEMON;
+    else p.style.cssText+=`width:${size}px;height:${size}px;background:${cols[k%cols.length]};border-radius:1.5px`;
+    $('#fx').appendChild(p);c.temp.push(p);
+    const P2=f=>[x+Math.cos(a)*(r+drift*f),y+Math.sin(a)*(r+drift*f)];
+    const T=(f,s)=>{const [X,Y]=P2(f);return `translate(${X.toFixed(1)}px,${Y.toFixed(1)}px) translate(-50%,-50%) rotate(45deg) scale(${s})`;};
+    A(c,'Částice',k?'':label,p,{transform:T(0,0)},[[140,{transform:T(.3,1.15)},E.dec],[420,{transform:T(.85,.9)},E.lin],[180,{transform:T(1,0)},E.acc]],t0+k*40,{kind:'fx',hide:k>0});
+  }
+}
+// Konfety — jen varianta C u 3/3: ploché, žlutá a zelená z HP a plátky citronu
+const LEMON=`<svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="7" fill="#FFD635"/><circle cx="7" cy="7" r="5.2" fill="#FFF0A0"/><g stroke="#FFD635" stroke-width="1.1" stroke-linecap="round"><path d="M7 7V2.4M7 7l4 2.3M7 7L3 9.3M7 7l4-2.3M7 7L3 4.7M7 7v4.6"/></g></svg>`;
+function burst(c,x,y,t0,o){
+  if(reduce)return;
+  const {n=12,dist=[40,80],spread=[0,360],grav=60,life=800,shapes=['dot','pill','leaf'],cols=[C.y,C.g],label='částice',scale=1}=o;
+  for(let j=0;j<n;j++){
+    const p=document.createElement('span');p.className='pt';
+    const sh=shapes[j%shapes.length],col=cols[(j*7+3)%cols.length];
+    if(sh==='lemon'){p.innerHTML=LEMON;}
+    else{const w=sh==='dot'?6:sh==='pill'?4:6,h=sh==='dot'?6:sh==='pill'?10:10;
+      p.style.cssText+=`width:${w*scale}px;height:${h*scale}px;background:${col};border-radius:${sh==='leaf'?'50% 0 50% 0':'99px'}`;}
+    $('#fx').appendChild(p);c.temp.push(p);
+    const a=(spread[0]+(spread[1]-spread[0])*((j+.5)/n)+(Math.sin(j*12.9)*14))*Math.PI/180;
+    const r=dist[0]+(dist[1]-dist[0])*(.5+.5*Math.sin(j*3.7));
+    const dx=Math.cos(a)*r,dy=Math.sin(a)*r,rot=(j%2?1:-1)*(120+j*23)%360,r0=j*37%360;
+    const base=`translate(${x}px,${y}px) translate(-50%,-50%)`;
+    // konfeta se při pádu „třepotá“ (scaleY kmitá) — plochá náhrada za 3D otáčení papírku
+    A(c,'Částice',label,p,{transform:`${base} translate(0,0) rotate(${r0}deg) scale(.2,.2)`,opacity:0},[
+      [1,{transform:`${base} translate(0,0) rotate(${r0}deg) scale(.2,.2)`,opacity:1},E.lin],
+      [life*.24,{transform:`${base} translate(${dx*.66}px,${dy*.66}px) rotate(${r0+rot*.35}deg) scale(1,1)`,opacity:1},E.dec],
+      [life*.19,{transform:`${base} translate(${dx*.84}px,${dy*.84+grav*.15}px) rotate(${r0+rot*.55}deg) scale(1,.35)`,opacity:1},E.lin],
+      [life*.19,{transform:`${base} translate(${dx*.94}px,${dy*.94+grav*.45}px) rotate(${r0+rot*.75}deg) scale(1,1)`,opacity:1},E.lin],
+      [life*.38,{transform:`${base} translate(${dx}px,${dy+grav}px) rotate(${r0+rot}deg) scale(.7,.4)`,opacity:0},E.lin]],t0,{kind:'fx',hide:j>0});
+  }
+}
+// Vlna — uzly poskočí jeden po druhém po směru cesty (vítězné kolečko)
+function wave(c,idx,t0,step=90,h=9){
+  if(reduce)return;
+  idx.forEach((i,j)=>A(c,'Vlna',j===0?'poskok uzlů po cestě':'',N[i].hop,{transform:'translateY(0)'},[[140,{transform:`translateY(-${h}px)`},E.dec],[S.fast.d,{transform:'translateY(0)'},S.fast.e]],t0+j*step,{hide:j>0}));
+}
+// Odměna na cestě: malý plamen doletí obloukem k počítadlu série
+let FIRE='';
+function trail(c,x0,y0,x1,y1,t0,d){
+  FIRE=FIRE||document.querySelector('#hdrFire .lit path').getAttribute('d');
+  const p=document.createElement('span');p.className='pt';
+  p.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="#FF6904"><path d="${FIRE}"/></svg>`;
+  $('#fx').appendChild(p);c.temp.push(p);
+  const cx=(x0+x1)/2-60,cy=Math.min(y0,y1)-30,n=12,steps=[];
+  const at=u=>{const t=u*u*(3-2*u),x=(1-t)*(1-t)*x0+2*(1-t)*t*cx+t*t*x1,y=(1-t)*(1-t)*y0+2*(1-t)*t*cy+t*t*y1;
+    return `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-50%) scale(${(.7+.5*Math.sin(Math.PI*u)).toFixed(3)})`;};
+  steps.push([1,{transform:at(0),opacity:1},E.lin]);
+  for(let i=1;i<=n;i++)steps.push([d/n,{transform:at(i/n),opacity:i===n?0:1},E.lin]);
+  A(c,'Série','plamínek doletí k počítadlu',p,{transform:at(0),opacity:0},steps,t0,{kind:'fx'});
+}
+/* Zapálení plamene v hlavičce. Vrací okamžik vrcholu (dopadu).
+   full = poměry změřené na plameni Duolinga (smáčknutí, zbarvení, protažení, vznášení, dopad);
+   soft = jen krátké smáčknutí a protažení; fade = prolnutí. */
+function ignite(c,land){
+  const f=$('#hdrFire'),dim=f.querySelector('.dim'),lit=f.querySelector('.lit'),lp=lit.querySelector('path');
+  const [x,y]=phonePt(f);
+  if(!reduce&&P.flame!=='fade')focus(c,land,'Série',x,y);
+  if(reduce||P.flame==='fade'){
+    A(c,'Série','plamen v hlavičce (prolnutí)',lit,{opacity:0},[[240,{opacity:1},E.lin]],land);
+    A(c,'Série','',dim,{opacity:1},[[240,{opacity:0},E.lin]],land,{hide:1});
+    return land+120;
+  }
+  const T=(y,sx,sy)=>({transform:`translateY(${y}px) scale(${sx},${sy})`});
+  if(P.flame==='soft'){
+    A(c,'Série','plamen: smáčknutí a protažení',f,T(0,1,1),[[60,T(0,1.12,.87),E.dec],[70,T(-1,.95,1.12),E.dec],[S.def.d,T(0,1,1),S.def.e]],land);
+    A(c,'Série','',dim,{opacity:1},[[40,{opacity:1},E.lin],[100,{opacity:0},E.lin]],land,{hide:1});
+    A(c,'Série','',lit,{opacity:0},[[40,{opacity:0},E.lin],[100,{opacity:1},E.lin]],land,{hide:1});
+    return land+130;
+  }
+  A(c,'Série','plamen: smáčknutí, zbarvení, protažení, vznášení, dopad',f,T(0,1,1),[
+    [70,T(0,1.28,.66),E.dec],[180,T(0,1.33,.64),E.lin],[50,T(-2,.92,1.42),E.dec],[160,T(-5,.96,1.3),E.dec],
+    [40,T(0,1.36,.86),E.acc],[60,T(0,1.34,.88),E.lin],[90,T(0,.97,1.16),E.dec],[S.def.d,T(0,1,1),S.def.e]],land);
+  A(c,'Série','',dim,{opacity:1},[[70,{opacity:1},E.lin],[1,{opacity:0},E.lin]],land,{hide:1});
+  A(c,'Série','',lit,{opacity:0},[[70,{opacity:0},E.lin],[1,{opacity:1},E.lin]],land,{hide:1});
+  A(c,'Série','',lp,{fill:'#767676'},[[70,{fill:'#767676'},E.lin],[90,{fill:'#FFC233'},E.lin],[90,{fill:'#FF6904'},E.lin]],land,{hide:1});
+  return land+500;
+}
+/* Dnešek v liště dnů. flip = nádech a překlopení (kalendář série Duolinga), pop = plamen
+   jemně naskočí, fade = prolnutí. Lišta je mimo hlavní ohnisko, proto ve B a A tiše. */
+function dayUpdate(c,t0){
+  const td=$('#today'),dash=td.querySelector('.dash'),lit=td.querySelector('.lit');
+  if(reduce||P.day==='fade'){
+    A(c,'Série','pátek (prolnutí)',lit,{opacity:0},[[240,{opacity:1},E.lin]],t0);
+    A(c,'Série','',dash,{opacity:1},[[240,{opacity:0},E.lin]],t0,{hide:1});
+    return;
+  }
+  if(P.day==='pop'){
+    A(c,'Série','pátek: plamen naskočí',lit,{opacity:0,transform:'scale(.6)'},[[S.fast.d,{opacity:1,transform:'scale(1)'},S.fast.e]],t0);
+    A(c,'Série','',dash,{opacity:1},[[160,{opacity:0},E.lin]],t0,{hide:1});
+    return;
+  }
+  const [x,y]=phonePt(td);focus(c,t0,'Pátek',x,y);
+  A(c,'Série','pátek: nádech a překlopení',td,{transform:'scale(1,1)'},[[140,{transform:'scale(1.16,1.16)'},E.dec],[60,{transform:'scale(1.16,1.16)'},E.lin],[90,{transform:'scale(0,1.16)'},E.acc],[S.fast.d,{transform:'scale(1,1)'},S.fast.e]],t0);
+  A(c,'Série','',dash,{opacity:1},[[290,{opacity:1},E.lin],[1,{opacity:0},E.lin]],t0,{hide:1});
+  A(c,'Série','',lit,{opacity:0},[[290,{opacity:0},E.lin],[1,{opacity:1},E.lin]],t0,{hide:1});
+  rays(c,x,y,t0+340,{n:6,r0:16,len:6,w:2,cols:[C.orange],label:'záblesk dne',hide:1});
+}
+function phonePt(el){ // střed prvku v souřadnicích telefonu
+  const r=el.getBoundingClientRect(),p=$('#phone').getBoundingClientRect(),s=fitScale||1;
+  return [(r.left+r.width/2-p.left)/s,(r.top+r.height/2-p.top)/s];
+}
+function grammar(c,t0){
+  const b=$('#banner');b.classList.add('on');
+  const [x,y]=phonePt(b);focus(c,t0,'Gramatika',x,y);
+  A(c,'Gramatika','zpráva o nové kartě',b,{opacity:0,transform:reduce?'translateY(0)':'translateY(14px)'},[[reduce?240:380,{opacity:1,transform:'translateY(0)'},E.dec]],t0);
+  const pk=t0+250,bp=pk-(P.press<1?peak(S.fast):0);
+  if(reduce||P.press===1)A(c,'Gramatika','odznak 1',$('#badge'),{transform:'scale(0)'},[[200,{transform:'scale(1)'},E.dec]],pk-100);
+  else A(c,'Gramatika','odznak 1',$('#badge'),{transform:'scale(0)'},[[S.fast.d,{transform:'scale(1)'},S.fast.e]],bp);
+  if(!reduce&&P.wiggle)A(c,'Gramatika','',$('#gramIco'),{transform:'rotate(0)'},[[90,{transform:'rotate(-10deg)'},E.dec],[110,{transform:'rotate(8deg)'},E.std],[S.def.d,{transform:'rotate(0)'},S.def.e]],bp,{hide:1});
+  return pk;
+}
+
+/* ═══════════════════════ čtyři sekvence ═══════════════════════
+   Hlavní údery (haptika a zvuk) leží na mřížce 250 ms, tedy na osminách při 120 BPM. */
+const SEQ={
+1:{title:'Krok 1 · Lekce',
+  sub:{A:'Uzel lekce zezelená, kroužek a text se tiše aktualizují a další uzel zežloutne. Žádné přestřelení ani částice.',
+       B:'Uzel se jemně zmáčkne a vyskočí (93 % → 103 %) a zezelená. Pak se štafeta předá dalšímu uzlu. Jedno ohnisko, dvě zastávky oka po cestě.',
+       C:'Plná verze: hlubší zmáčknutí a výskok, záblesk z paprsků, čárky tečou k dalšímu kroku, dvě pozvání.'},
+  build(c){
+    const coin=COIN();
+    const pk=nodeDone(c,0,0,{rayN:6});
+    ev(c,pk,'h','light','Uzel hotový');ev(c,pk,'s','n1','znělka I (C)');
+    if(coin)c.off=pk-250; // zbytek kroku navazuje na dopad mince
+    pathFill(c,'A','y',300,520);
+    ringTo(c,0,1,300);rollNum(c,$('#ringNum'),0,1,500,'Kroužek dne',{pop:$('#ringB')});
+    textTo(c,1,400);
+    const nx=nodeNext(c,1,reduce?500:(coin?780:620)); // u mince: až dojede žlutá
+    if(P.key==='C')ev(c,nx,'h','selection','Další krok');
+  },
+  beats:{
+    A:[[0,'Uzel lekce zezelená od středu (260 ms) a ikona zbělá. Lehká haptika ve 250 ms.',''],
+       [300,'Kroužek dne doroste na 1/3, číslo se přetočí, cesta se nalije žlutou.',''],
+       [500,'Uzel Slova zežloutne a objeví se svatozář. Pak je klid.','Žádné pozvání: klidná varianta nic neopakuje.']],
+    B:[[0,'Uzel se zmáčkne na 93 %.',''],
+       [125,'Na dně zmáčknutí uzel v jednom snímku zezelená. Přijde lehká haptika a první tón znělky.','Stav se mění naráz, bez prolínání, jako v Duolingu.'],
+       [250,'Uzel vyskočí na 103 % a zazní druhý, hlasitější tón. Ikona dobíhá o 40 ms. Žádné částice.','Jemné přestřelení je pocit „klapnutí“, ne skok. Odměnou je samotná změna stavu.'],
+       [300,'Kroužek doroste na 1/3, číslo se přetočí a lehce ťukne (108 %), cesta se nalije žlutou.',''],
+       [620,'Uzel Slova se lehce nadechne (103,5 %), zežloutne a svatozář z něj vyroste.','Oko jde po cestě: z uzlu na sousední uzel.'],
+       [1420,'Jedno pozvání vlnkou, pak klid.','']],
+    C:[[0,'Svatozář se vsákne, uzel se zmáčkne na 88 %, vyskočí na 106 % a ikona dobíhá (82 → 114 %).','Hodnoty změřené na uzlu Duolinga.'],
+       [250,'Haptika, tón a záblesk ze 6 paprsků.',''],
+       [300,'Kroužek, číslo (ťukne na 116 %) a žlutá cesta, čárky tečou k cíli.',''],
+       [620,'Uzel Slova se nadechne na 107 % a ve 750 ms přijde haptika selection.',''],
+       [1420,'Dvě pozvání vlnkou, pak klid.','']]}},
+2:{title:'Krok 2 · Slova z lekce',
+  sub:{A:'Stejné jako krok 1. Navíc tiše vyjede zpráva o nové gramatické kartě a objeví se odznak.',
+       B:'Stejná kostra jako krok 1, aby se pohyb naučil. Jediný přídavek je skutečná odměna: nová gramatická karta a odznak na tabu.',
+       C:'Plná verze: záblesk a 3 kosočtverečky, tekoucí čárky, zhoupnutí ikony Gramatiky.'},
+  build(c){
+    const coin=COIN();let pk;
+    if(coin){pathFill(c,'A','g',0,375,E.arrive);pk=nodeDone(c,1,375,{from:arrivalDir('A')});} // nejdřív cesta, pak mince
+    else pk=nodeDone(c,1,0);
+    ev(c,pk,'h','light','Uzel hotový');ev(c,pk,'s','n2','znělka IV (F)');
+    if(P.diamonds)diamonds(c,N[1].x,N[1].y,pk-10,{n:3,r:50,drift:16,rot:-80});
+    if(coin)c.off=pk-250;
+    else pathFill(c,'A','g',250,300);   // zelená doteče od Lekce ke Slovům
+    pathFill(c,'B','y',400,500);   // žlutá vyrazí od Slov k testu
+    ringTo(c,1,2,300);rollNum(c,$('#ringNum'),1,2,500,'Kroužek dne',{pop:$('#ringB')});
+    textTo(c,2,400);
+    const nx=nodeNext(c,2,reduce?500:(coin?860:620));
+    if(P.key==='C')ev(c,nx,'h','selection','Další krok');
+    const g=grammar(c,1000);
+    ev(c,g,'s','pop','odznak');
+  },
+  beats:{
+    A:[[0,'Uzel Slova zezelená, cesta za ním zezelená a cesta dál zežloutne, kroužek 2/3, další uzel zežloutne.',''],
+       [1000,'Zespodu vyjede zpráva o nové gramatické kartě a objeví se odznak 1.','']],
+    B:[[0,'Uzel Slova se zmáčkne, ve 125 ms zezelená v jednom snímku a vyskočí, stejně jako lekce. Znělka o kvartu výš.','Opakovaný vzor se naučí rychleji než pokaždé jiný efekt.'],
+       [250,'Cesta od Lekce zezelená až ke Slovům (300 ms) a od 400 ms se od Slov nalije žlutá k testu.','Zelená doteče k hotovému kroku, žlutá z něj vyrazí dál: hotový řetěz a cesta vpřed.'],
+       [300,'Kroužek 2/3 a text „Skoro hotovo!“ (efekt blízkého cíle).',''],
+       [620,'Uzel Denní test se nadechne a dostane svatozář.',''],
+       [1000,'Vyjede zpráva „Přibyla nová gramatická karta“ a ve 1250 ms pípne odznak 1.','Jediný přídavek oproti kroku 1 je skutečná odměna, ne dekorace.']],
+    C:[[0,'Kostra jako v kroku 1.',''],
+       [250,'Záblesk z 8 paprsků a 3 kosočtverečky pomalu odplují. Cesta od Lekce zezelená až ke Slovům.',''],
+       [400,'Od Slov se nalije žlutá k testu a čárky tečou k cíli.',''],
+       [1000,'Zpráva o kartě, ve 1250 ms odznak a zhoupnutí ikony Gramatiky.','']]}},
+3:{title:'Krok 3 · Denní test (3/3, den hotový)',
+  sub:{A:'Den je hotový: kroužek se uzavře a zezelená a plamen v hlavičce se rozsvítí. Všechno jen prolnutím.',
+       B:'Vrchol dne ve třech zastávkách oka: uzel, kroužek (jeden záblesk a pumpnutí), plamen série (krátké smáčknutí). Bez konfet a bez putování odměn. Pátek v liště se změní tiše.',
+       C:'Plná show: vítězná vlna, uzavření kroužku se 3 záblesky a 8 konfetami, plamínek doletí k sérii, plamen se zapálí podle Duolinga, pátek se překlopí.'},
+  build(c){
+    if(c.phase==='before'){
+      /* 1. část: HP dokončí cestu. Uzel testu → cesta → (vlna) → kroužek 3/3 → „Pecka, máš hotovo!“.
+         Série se ještě nemění: prodlouží ji až karta série, která přijde hned potom. */
+      let pk;
+      if(COIN()){pathFill(c,'B','g',0,375,E.arrive);pk=nodeDone(c,2,375,{from:arrivalDir('B')});}
+      else pk=nodeDone(c,2,0);
+      if(P.key!=='B')ev(c,pk,'h','light','Uzel hotový');
+      ev(c,pk,'s','n3','znělka V (G)');
+      if(COIN())c.off=pk-250;
+      else pathFill(c,'B','g',300,450);
+      if(P.wave)wave(c,[0,1,2],420,90,9);
+      const close=P.key==='C'?1000:750,arc=$('#arc'),[rx,ry]=phonePt($('#ring'));
+      focus(c,close-300,'Kroužek dne',rx,ry);
+      ringTo(c,2,3,close-(P.key==='C'?401:351),P.key==='C'?400:350,P.key==='A'?E.std:E.acc);
+      A(c,'Kroužek dne','zezelená',arc,{stroke:C.y},[[160,{stroke:C.g},E.lin]],close);
+      if(!reduce&&P.ringStroke)A(c,'Kroužek dne','tah zesílí',arc,{strokeWidth:4.4},[[90,{strokeWidth:P.key==='C'?7:6},E.dec],[260,{strokeWidth:4.4},E.std]],close,{hide:1});
+      if(!reduce&&P.ringPump>1)A(c,'Kroužek dne',`pumpnutí ${Math.round(P.ringPump*100)} %`,$('#ring'),{transform:'scale(1)'},[[110,{transform:`scale(${P.ringPump})`},E.dec],[S.hero.d,{transform:'scale(1)'},S.hero.e]],close);
+      rollNum(c,$('#ringNum'),2,3,close-140,'Kroužek dne',{pop:$('#ringB'),popAt:140});
+      ev(c,close,'h','light','Den hotový');ev(c,close,'s','day','akord dne');
+      if(P.ringRays>=1)rays(c,rx+28,ry-44,close+20,{n:8,r0:5,len:9,w:2.2,label:P.ringRays>1?'3 záblesky kolem kroužku':'záblesk u kroužku'});
+      if(P.ringRays>=3){rays(c,rx-40,ry+4,close+140,{n:8,r0:4,len:8,w:2.2,cols:[C.g,C.y],hide:1});rays(c,rx+36,ry+40,close+260,{n:8,r0:4,len:8,w:2.2,hide:1});}
+      if(P.confetti)burst(c,rx,ry,close+10,{n:P.confetti,dist:[52,100],spread:[-172,0],grav:70,life:950,shapes:lemonOn?['lemon','dot','leaf','pill']:['dot','leaf','pill'],label:'konfety z kroužku'});
+      textTo(c,3,close+60);
+      return;
+    }
+    if(c.phase==='after'){
+      /* 2. část: plamen z karty série přistál v hlavičce. Série 13, pátek v liště, Procvičování. */
+      const f=$('#hdrFire'),[fx,fy]=phonePt(f);
+      focus(c,0,'Série',fx,fy);
+      if(reduce||P.key==='A'){
+        A(c,'Série','plamen se rozsvítí (prolnutí)',f.querySelector('.lit'),{opacity:0},[[240,{opacity:1},E.lin]],0);
+        A(c,'Série','',f.querySelector('.dim'),{opacity:1},[[240,{opacity:0},E.lin]],0,{hide:1});
+      }else{
+        A(c,'Série','plamen přistál a dosedne',f,{transform:'translateY(0) scale(1,1)'},[[70,{transform:'translateY(0) scale(1.22,.78)'},E.dec],[S.def.d,{transform:'translateY(0) scale(1,1)'},S.def.e]],0);
+        A(c,'Série','',f.querySelector('.dim'),{opacity:0},[[1,{opacity:0},E.lin]],0,{hide:1});
+        A(c,'Série','',f.querySelector('.lit'),{opacity:1},[[1,{opacity:1},E.lin]],0,{hide:1});
+      }
+      rollNum(c,$('#streakNum'),12,13,0,'Série',{pop:$('#streakNum'),popAt:120});
+      A(c,'Série','',$('#streakNum'),{color:'#767676'},[[60,{color:'#767676'},E.lin],[1,{color:'#FF6600'},E.lin]],0,{hide:1});
+      dayUpdate(c,300);
+      nodeEmerge(c,3,655); // dopad na úder 1375 ms
+      return;
+    }
+    if(c.afterStreak){
+      /* Navazuje na obrazovku série: plamen přiletěl do počítadla v hlavičce a HP pak pokračuje
+         odshora dolů, kam se oko dívá: hlavička → kroužek dne → uzel a cesta → lišta dnů → Procvičování. */
+      const f=$('#hdrFire'),[fx,fy]=phonePt(f);
+      focus(c,0,'Série',fx,fy);
+      if(reduce||P.key==='A'){
+        A(c,'Série','plamen se rozsvítí (prolnutí)',f.querySelector('.lit'),{opacity:0},[[240,{opacity:1},E.lin]],0);
+        A(c,'Série','',f.querySelector('.dim'),{opacity:1},[[240,{opacity:0},E.lin]],0,{hide:1});
+      }else{
+        A(c,'Série','plamen přistál a dosedne',f,{transform:'translateY(0) scale(1,1)'},[[70,{transform:'translateY(0) scale(1.22,.78)'},E.dec],[S.def.d,{transform:'translateY(0) scale(1,1)'},S.def.e]],0);
+        A(c,'Série','',f.querySelector('.dim'),{opacity:0},[[1,{opacity:0},E.lin]],0,{hide:1});
+        A(c,'Série','',f.querySelector('.lit'),{opacity:1},[[1,{opacity:1},E.lin]],0,{hide:1});
+      }
+      rollNum(c,$('#streakNum'),12,13,0,'Série',{pop:$('#streakNum'),popAt:120});
+      A(c,'Série','',$('#streakNum'),{color:'#767676'},[[60,{color:'#767676'},E.lin],[1,{color:'#FF6600'},E.lin]],0,{hide:1});
+      const close=750,arc=$('#arc'),[rx,ry]=phonePt($('#ring'));
+      focus(c,close-300,'Kroužek dne',rx,ry);
+      ringTo(c,2,3,P.key==='A'?close-301:close-401,P.key==='A'?300:400,P.key==='A'?E.std:E.acc);
+      A(c,'Kroužek dne','zezelená',arc,{stroke:C.y},[[160,{stroke:C.g},E.lin]],close);
+      if(!reduce&&P.ringStroke)A(c,'Kroužek dne','tah zesílí',arc,{strokeWidth:4.4},[[90,{strokeWidth:P.key==='C'?7:6},E.dec],[260,{strokeWidth:4.4},E.std]],close,{hide:1});
+      if(!reduce&&P.ringPump>1)A(c,'Kroužek dne',`pumpnutí ${Math.round(P.ringPump*100)} %`,$('#ring'),{transform:'scale(1)'},[[110,{transform:`scale(${P.ringPump})`},E.dec],[S.hero.d,{transform:'scale(1)'},S.hero.e]],close);
+      rollNum(c,$('#ringNum'),2,3,close-140,'Kroužek dne',{pop:$('#ringB'),popAt:140});
+      if(P.key!=='A')ev(c,close,'h','light','Den hotový');
+      ev(c,close,'s','day','akord dne');
+      if(P.ringRays>=1)rays(c,rx+28,ry-44,close+20,{n:8,r0:5,len:9,w:2.2,label:P.ringRays>1?'3 záblesky kolem kroužku':'záblesk u kroužku'});
+      if(P.ringRays>=3){rays(c,rx-40,ry+4,close+140,{n:8,r0:4,len:8,w:2.2,cols:[C.g,C.y],hide:1});rays(c,rx+36,ry+40,close+260,{n:8,r0:4,len:8,w:2.2,hide:1});}
+      if(P.confetti)burst(c,rx,ry,close+10,{n:P.confetti,dist:[52,100],spread:[-172,0],grav:70,life:950,shapes:lemonOn?['lemon','dot','leaf','pill']:['dot','leaf','pill'],label:'konfety z kroužku'});
+      textTo(c,3,close+60);
+      if(COIN()){
+        pathFill(c,'B','g',1000,375,E.arrive);nodeDone(c,2,1375,{from:arrivalDir('B')});
+        if(P.wave)wave(c,[0,1,2],1800,90,9);
+        dayUpdate(c,1900);
+        nodeEmerge(c,3,2200);
+      }else{
+        nodeDone(c,2,1000);
+        pathFill(c,'B','g',1150,450);
+        if(P.wave)wave(c,[0,1,2],1300,90,9);
+        dayUpdate(c,1500);
+        nodeEmerge(c,3,1800);
+      }
+      return;
+    }
+    let pk;
+    if(COIN()){pathFill(c,'B','g',0,375,E.arrive);pk=nodeDone(c,2,375,{from:arrivalDir('B')});}
+    else pk=nodeDone(c,2,0);
+    if(P.key!=='B'){ev(c,pk,'h','light','Uzel hotový');}
+    ev(c,pk,'s','n3','znělka V (G)');
+    if(COIN())c.off=pk-250;
+    else pathFill(c,'B','g',300,450);
+    if(P.wave)wave(c,[0,1,2],420,90,9);
+    const close=P.key==='C'?1000:750,arc=$('#arc'),[rx,ry]=phonePt($('#ring'));
+    focus(c,close-300,'Kroužek dne',rx,ry);
+    ringTo(c,2,3,close-(P.key==='C'?401:351),P.key==='C'?400:350,P.key==='A'?E.std:E.acc);
+    A(c,'Kroužek dne','zezelená',arc,{stroke:C.y},[[160,{stroke:C.g},E.lin]],close);
+    if(!reduce&&P.ringStroke)A(c,'Kroužek dne','tah zesílí',arc,{strokeWidth:4.4},[[90,{strokeWidth:P.key==='C'?7:6},E.dec],[260,{strokeWidth:4.4},E.std]],close,{hide:1});
+    if(!reduce&&P.ringPump>1)A(c,'Kroužek dne',`pumpnutí ${Math.round(P.ringPump*100)} %`,$('#ring'),{transform:'scale(1)'},[[110,{transform:`scale(${P.ringPump})`},E.dec],[S.hero.d,{transform:'scale(1)'},S.hero.e]],close);
+    rollNum(c,$('#ringNum'),2,3,close-140,'Kroužek dne',{pop:$('#ringB'),popAt:140});
+    ev(c,close,'h','success','Den hotový');ev(c,close,'s','day','akord dne');
+    if(P.ringRays>=1)rays(c,rx+28,ry-44,close+20,{n:8,r0:5,len:9,w:2.2,label:P.ringRays>1?'3 záblesky kolem kroužku':'záblesk u kroužku'});
+    if(P.ringRays>=3){rays(c,rx-40,ry+4,close+140,{n:8,r0:4,len:8,w:2.2,cols:[C.g,C.y],hide:1});rays(c,rx+36,ry+40,close+260,{n:8,r0:4,len:8,w:2.2,hide:1});}
+    if(P.confetti)burst(c,rx,ry,close+10,{n:P.confetti,dist:[52,100],spread:[-172,0],grav:70,life:950,shapes:lemonOn?['lemon','dot','leaf','pill']:['dot','leaf','pill'],label:'konfety z kroužku'});
+    textTo(c,3,close+60);
+    // série
+    const f=$('#hdrFire'),[fx,fy]=phonePt(f);
+    let land;
+    if(P.trail&&!reduce){trail(c,rx,ry,fx,fy,1250,500);land=1750;}
+    else land=P.key==='A'?close+300:1120;
+    const top=ignite(c,reduce?close+300:land);
+    rollNum(c,$('#streakNum'),12,13,top-140,'Série',{pop:$('#streakNum'),popAt:140});
+    A(c,'Série','',$('#streakNum'),{color:'#767676'},[[60,{color:'#767676'},E.lin],[1,{color:'#FF6600'},E.lin]],top-140,{hide:1});
+    if(P.key==='C')rays(c,fx,fy-2,top,{n:7,r0:14,len:7,w:2,cols:[C.orange,'#FFB37A'],label:'záblesk plamene',hide:1});
+    if(P.key==='C'){ev(c,top,'h','medium','Série +1');ev(c,top,'s','streak','dopad plamene');}
+    else if(P.key==='B'){ev(c,top,'h','light','Série +1');ev(c,top,'s','streak','plamen');}
+    dayUpdate(c,P.key==='C'?top+200:top);
+    nodeEmerge(c,3,P.key==='C'?top+650:top+350);
+  },
+  subAfter:'Nejdřív příčina, pak odměna: HP dokončí cestu (uzel testu, cesta, kroužek 3/3, „Pecka, máš hotovo!“), pak zdola vyjede karta série přes ztmavenou HP. Po „Pokračovat“ z ní plamen odletí do počítadla v hlavičce. Časová osa ukazuje poslední přehranou část HP.',
+  beatsAfter:[[0,'HP: uzel testu se zmáčkne, zezelená a cesta se dokreslí.','Po návratu z testu je oko u uzlu.'],
+       [750,'Kroužek se uzavře na 3/3, zezelená a pumpne, text „Pecka, máš hotovo!“. Lehká haptika a akord.','Den je dokončený. To je příčina, série je následek.'],
+       [1200,'Pauza 450 ms, aby „hotovo“ dosedlo. Pak zdola vyjede karta série (420 ms) přes ztmavenou HP.',''],
+       [1870,'Na kartě se šedý plamen zapálí, 12 → 13, haptika „úspěch“. Pátek se připojí do kapsle týdne a vyjede „Pokračovat“.','Jediná haptika „úspěch“ za den. Karta je vrchol i závěr dne.'],
+       [0,'Po „Pokračovat“ karta sjede dolů a plamen odletí do počítadla v hlavičce. Tam dopadne, série 13, pak tiše naskočí pátek v liště.','Odměna přistane tam, kde ji uživatel bude zítra hledat.'],
+       [655,'Procvičování se zatřese (jako by se něco dralo ven), zamáčkne se do země, vystřelí o 34 px nahoru a ve vzduchu se jednou otočí zleva doprava jako mince: šedý líc, hrana, žlutý rub.','Z neaktivního se stává aktivní, a s chutí.'],
+       [1375,'Žuchnutí: rozplácne se na 126 × 70 %, odpruží, ze země do stran vyletí obláčky prachu a obrazovka se otřese o 3 px. Střední haptika a tupé „bum“. Pak svatozář.','Plochý prach a krátký otřes jednou denně jsou ještě „zábava“, ne křik.']],
+  subStreak:'Po testu přijde „Výborně!“ a obrazovka série. Plamen z ní odletí do počítadla v hlavičce a HP pak pokračuje odshora dolů: kroužek dne, uzel testu a cesta, lišta dnů, Procvičování.',
+  beatsStreak:[[0,'Plamen přiletěl z obrazovky série do počítadla: dosedne (122 × 78 %), rozsvítí se a série se přetočí na 13.','Kontinuita: odměna z předchozí obrazovky „přistane“ tam, kde ji uživatel bude hledat.'],
+       [350,'Kroužek dne zrychluje k uzavření a v 750 ms se uzavře, zezelená a pumpne. Lehká haptika, akord dne.','Haptika „úspěch“ už zazněla na obrazovce série, tady stačí lehká.'],
+       [1000,'Uzel testu se zmáčkne a zezelená a cesta ke Slovům se dokreslí.',''],
+       [1500,'Pátek v liště dnů tiše naskočí. Ve 1800 ms se nabídne Procvičování.','Oko jde odshora dolů, jak čte stránku.']],
+  beats:{
+    A:[[0,'Uzel testu zezelená, poslední úsek cesty zezelená.',''],
+       [400,'Kroužek doroste a v 750 ms se uzavře a zezelená. Haptika „úspěch“.',''],
+       [1050,'Plamen v hlavičce i pátek v liště se prolnou do oranžové, série 12 → 13.',''],
+       [1350,'Procvičování zežloutne. Konec.','']],
+    B:[[0,'Uzel testu se zmáčkne, ve 125 ms zezelená v jednom snímku a vyskočí. Znělka V. Haptika tu není, přijde až s uzavřením dne.','Dva silné impulzy krátce po sobě by splynuly.'],
+       [400,'Kroužek dne zrychluje k uzavření.','Ukazatel nesmí těsně před cílem zpomalit.'],
+       [750,'Kroužek se uzavře: zezelená, tah zesílí na 6 px, pumpne na 106 % a vyskočí jeden záblesk. Haptika „úspěch“ a akord, který kadenci kroků rozřeší.','Hlavní vrchol. Jeden záblesk, ne ohňostroj.'],
+       [1120,'Plamen v hlavičce se krátce smáčkne a protáhne (112 %) a rozsvítí se, série naskočí na 13. Pátek v liště se ve stejnou chvíli tiše změní na plamen.','Odměny jdou po sobě, ale bez letu přes obrazovku. Lišta je mimo ohnisko, proto tiše.'],
+       [1600,'Procvičování se nabídne bez pozvání.','Den je hotový, nic dalšího nenaléhá.']],
+    C:[[0,'Uzel testu: plná kostra, záblesk.',''],
+       [420,'Vítězná vlna: uzly 1, 2 a 3 poskočí po 90 ms.',''],
+       [1000,'Uzavření kroužku: tah 7 px, pumpnutí 110 %, 3 záblesky po 120 ms a 8 konfet.',''],
+       [1250,'Plamínek doletí z kroužku k sérii (500 ms).','Odměna putuje jako drahokamy v Duolingu.'],
+       [1750,'Plamen podle Duolinga: smáčknutí 128 × 66 %, zbarvení, protažení 92 × 142 %, vznášení, dopad ve 2250 ms. Haptika medium.',''],
+       [2450,'Pátek v liště se nadechne a překlopí.',''],
+       [2900,'Procvičování se nabídne s jedním pozváním.','']]}},
+};
+
+/* ═══════════════════════ přehrávač ═══════════════════════ */
+let speed=1,sound=false,lemonOn=true,showRet=true,slowSave=true,fitScale=1;
+let run=null,current=1;
+
+function fire(e){
+  if(e.type==='h'){
+    flash('#sigH','#sigHv',e.v);
+    if(navigator.vibrate&&navigator.userActivation&&navigator.userActivation.hasBeenActive){const p={light:10,selection:6,soft:8,medium:22,success:[14,60,22]}[e.v];try{navigator.vibrate(p)}catch(_){}}
+  }else{flash('#sigS','#sigSv',e.label); if(sound)sfx(e.v);}
+}
+function flash(box,val,txt){const b=$(box);$(val).textContent=txt;b.classList.add('on');clearTimeout(b._t);b._t=setTimeout(()=>b.classList.remove('on'),260/speed+120);}
+
+function stopRun(){
+  if(!run)return;
+  run.cancelled=true;
+  run.anims.forEach(a=>a.cancel());run.master&&run.master.cancel();
+  run.c&&run.c.temp.forEach(p=>p.remove());
+  $('#succ').classList.remove('on');$('#strk').classList.remove('on');$('#kScrim').classList.remove('on');$('#hp').style.transform='';
+  if(run.cleanStreak)run.cleanStreak();$('#fly').innerHTML='';$('#kFlame').style.visibility='';
+  run=null;$('#phone').classList.remove('playing');
+}
+
+/* Jedna část animace HP: sestaví časovou osu, přehraje ji a počká na konec. */
+async function runHP(me,s,flags={}){
+  const c=ctx();me.c=c;Object.assign(c,flags);
+  SEQ[s].build(c);
+  drawTimeline(c);
+  const total=Math.max(...c.tracks.map(t=>t.t0+t.T*t.iter),...c.events.map(e=>e.t))+80;
+  me.anims=c.tracks.map(t=>{const a=t.el.animate(t.kf,{delay:t.t0,duration:t.T,iterations:t.iter,fill:'both'});a.playbackRate=speed;return a;});
+  const master=document.createElement('i').animate([{opacity:0},{opacity:1}],{duration:total});master.playbackRate=speed;me.master=master;
+  if(me.cleanStreak)requestAnimationFrame(()=>{me.cleanStreak&&me.cleanStreak();me.cleanStreak=null;});
+  $('#phone').classList.add('playing');
+  const fired=new Set(),ph=$('#playhead');
+  const loop=()=>{
+    if(me.cancelled)return;
+    const t=master.currentTime??total;
+    c.events.forEach((e,i)=>{if(!fired.has(i)&&t>=e.t){fired.add(i);fire(e);}});
+    if(ph)ph.style.left=`calc(96px + (100% - 96px) * ${Math.min(1,t/total)})`;
+    if(master.playState!=='finished')requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+  await master.finished.catch(()=>{});
+  if(ph&&!me.cancelled)ph.style.left='calc(100% - 1px)';
+  me.master=null;
+  return c;
+}
+const finishPart=(me,c)=>{me.anims.forEach(a=>a.cancel());c.temp.forEach(p=>p.remove());};
+const pause=(me,ms)=>new Promise(r=>{const t0=performance.now();const tick=()=>{if(me.cancelled||me.skipSucc||performance.now()-t0>=ms/speed)return r();setTimeout(tick,16);};tick();});
+async function playStep(s,{fromAll=false}={}){
+  stopRun();
+  current=s;markStep(s);describe(s);
+  const me={anims:[],cancelled:false};run=me;
+  render(s===3?2:s-1);
+  if(s===3){$('#banner').classList.remove('on');$('#badge').classList.remove('on');}
+  const mode=s===3&&showStreak?streakOrder:'off';
+  // přechodová success obrazovka (a u „před HP“ hned obrazovka série)
+  if(showRet){
+    if(mode==='before'){$('#strk').classList.add('on');setRoll($('#kRoll'),[12]);}
+    await successScreen(me,s,fromAll,{toHP:mode!=='before'});
+    if(me.cancelled)return;
+    if(mode==='before'){await streakScreen(me,fromAll,{sheet:false});if(me.cancelled)return;}
+  }
+  if(mode==='after'){
+    // 1) HP dokončí cestu: uzel, cesta, kroužek 3/3, „Pecka, máš hotovo!“
+    const c1=await runHP(me,s,{phase:'before'});if(me.cancelled)return;
+    render(3,{streak:false});finishPart(me,c1);
+    me.skipSucc=false;
+    await pause(me,450);if(me.cancelled)return;
+    // 2) odměna: karta série vyjede přes HP, plamen z ní odletí do hlavičky
+    await streakScreen(me,fromAll,{sheet:true});if(me.cancelled)return;
+    // 3) HP převezme dopad plamene: série 13, pátek v liště, Procvičování
+    const c2=await runHP(me,s,{phase:'after'});if(me.cancelled)return;
+    render(s);finishPart(me,c2);
+  }else{
+    const c=await runHP(me,s,{afterStreak:mode==='before'});if(me.cancelled)return;
+    render(s);finishPart(me,c);
+  }
+  $('#phone').classList.remove('playing');run=null;
+}
+function skip(){
+  if(run&&!run.master){run.skipSucc=true;return;}
+  if(!run||!run.master)return;
+  run.anims.forEach(a=>{try{a.finish()}catch(_){}});
+  run.master.finish();
+}
+/* Success obrazovka: (tečky při ukládání) → tečky se slijí do středu → odznak vyskočí
+   s pootočením → fajfka se nakreslí → paprsky se rozvinou → drží → fade through na HP. */
+async function successScreen(me,s,fromAll,{toHP=true}={}){
+  const sc=$('#succ'),dots=[...document.querySelectorAll('#sDots i')],badge=$('#sBadge'),chk=$('#sCheck'),rays=$('#sRays'),head=$('#sHead');
+  $('#sBody').textContent=SUCC[s-1];
+  const sa=[],go=(el,kf,o)=>{const a=el.animate(kf,{fill:'both',...o});a.playbackRate=speed;me.anims.push(a);sa.push(a);return a;};
+  const wait=ms=>new Promise(r=>{const t0=performance.now();const tick=()=>{if(me.cancelled||me.skipSucc||performance.now()-t0>=ms/speed)return r();setTimeout(tick,16);};tick();});
+  const later=(ms,fn)=>setTimeout(()=>{if(!me.cancelled)fn();},ms/speed);
+  sc.classList.add('on');sc.style.opacity='';
+  badge.style.opacity=0;rays.style.opacity=0;chk.style.strokeDashoffset=1;
+  dots.forEach(d=>{d.style.opacity=slowSave?1:0;});
+  go(head,[{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:300,easing:E.dec});
+  if(slowSave){
+    // tečky jen při pomalém ukládání (nad 400 ms); když už se ukážou, tak aspoň 500 ms, jinak problikne
+    if(!reduce)dots.forEach((d,i)=>go(d,[{transform:'translateY(-4px)'},{transform:'translateY(4px)'},{transform:'translateY(-4px)'}],{duration:900,delay:-i*150,iterations:Infinity,easing:'cubic-bezier(.45,0,.55,1)'}));
+    await wait(fromAll?900:800);if(me.cancelled)return;
+    // tečky se slijí do středu odznaku
+    dots.forEach((d,i)=>{const dx=199.5-(178+[4.83,21.54,38.26][i]),dy=280.5-(284+[4.83,7.41,12.4][i]);
+      go(d,reduce?[{opacity:1},{opacity:0}]:[{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${dx}px,${dy}px) scale(.2)`,opacity:0}],{duration:reduce?150:160,easing:E.acc});});
+  }
+  const t1=slowSave?60:0;
+  if(reduce||P.key==='A'){
+    go(badge,[{opacity:0,transform:'scale(.9)'},{opacity:1,transform:'scale(1)'}],{duration:reduce?200:240,delay:t1,easing:E.dec});
+    chk.style.strokeDashoffset=0;
+    go(rays,[{opacity:0},{opacity:1}],{duration:400,delay:t1+80,easing:E.lin});
+    later(t1+120,()=>{fire({type:'h',v:'light',label:'Výborně'});fire({type:'s',v:'succ',label:'výborně'});});
+  }else{
+    go(badge,[{opacity:0},{opacity:1}],{duration:90,delay:t1,easing:E.lin});
+    go(badge,[{transform:'scale(.4) rotate(-20deg)'},{transform:'scale(1) rotate(0)'}],{duration:S.fast.d,delay:t1,easing:S.fast.e,composite:'replace'});
+    go(chk,[{strokeDashoffset:1},{strokeDashoffset:0}],{duration:200,delay:t1+peak(S.fast),easing:E.dec});
+    go(rays,[{opacity:0},{opacity:1}],{duration:300,delay:t1+80,easing:E.lin});
+    go(rays,P.key==='C'?[{transform:'scale(.7) rotate(0)'},{transform:'scale(1) rotate(3deg)',offset:.2},{transform:'scale(1) rotate(12deg)'}]:[{transform:'scale(.7)'},{transform:'scale(1)'}],{duration:P.key==='C'?2600:520,delay:t1+80,easing:P.key==='C'?E.lin:E.dec});
+    later(t1+peak(S.fast),()=>{fire({type:'h',v:'light',label:'Výborně'});fire({type:'s',v:'succ',label:'výborně'});});
+  }
+  await wait(fromAll?1300:1200);if(me.cancelled)return;
+  // fade through na HP: obrazovka zmizí, HP dosedne z 98 %
+  const out=go(sc,[{opacity:1},{opacity:0}],{duration:220,easing:E.acc});
+  if(toHP)go($('#hp'),[{transform:'scale(.98)'},{transform:'scale(1)'}],{duration:320,delay:120,easing:E.dec});
+  await out.finished.catch(()=>{});if(me.cancelled)return;
+  sc.classList.remove('on');
+  sa.forEach(a=>a.cancel()); // úklid: žádná animace obrazovky nesmí přežít do dalšího přehrání
+  if(!toHP)return;
+  await wait(300); // HP dosedne a oko přistane — teprve pak oslava
+}
+/* ═══════════════════════ obrazovka série (po 3/3) ═══════════════════════
+   Figma „Streak“ (13994:95997). Šedý plamen se zapálí, číslo přeskočí, pátek se připojí
+   do kapsle týdne, vyjede tlačítko. Po klepnutí plamen odletí do počítadla v hlavičce HP. */
+let showStreak=true,streakOrder='after'; // after = HP dokončí cestu a pak karta série; before = série před HP
+const plural=n=>n===1?'den':(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?'dny':'dní';
+const FLAME_D=document.querySelector('#kFlame .out').getAttribute('d');
+// paprsky záblesku pro obrazovky nad HP (vlastní vrstva, ne časová osa HP)
+function burstOn(layer,go,x,y,delay,{n=8,r0=60,len=16,w=3,cols=['#FF8C2E','#FFC233'],rot=0}={}){
+  const R=r0+len+4,ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
+  svg.setAttribute('width',2*R);svg.setAttribute('height',2*R);svg.setAttribute('viewBox',`${-R} ${-R} ${2*R} ${2*R}`);
+  svg.style.cssText=`position:absolute;left:${x-R}px;top:${y-R}px;overflow:visible`;
+  layer.appendChild(svg);
+  for(let k=0;k<n;k++){
+    const a=(rot-90+k*360/n)*Math.PI/180,L=k%2?len*.62:len,l=document.createElementNS(ns,'line');
+    l.setAttribute('x1',(Math.cos(a)*r0).toFixed(2));l.setAttribute('y1',(Math.sin(a)*r0).toFixed(2));
+    l.setAttribute('x2',(Math.cos(a)*(r0+L)).toFixed(2));l.setAttribute('y2',(Math.sin(a)*(r0+L)).toFixed(2));
+    l.setAttribute('stroke',cols[k%cols.length]);l.setAttribute('stroke-width',w);l.setAttribute('stroke-linecap','round');
+    l.setAttribute('pathLength','1');l.setAttribute('stroke-dasharray','1 1');l.style.strokeDashoffset=1;l.style.opacity=0;
+    svg.appendChild(l);
+    go(l,[{strokeDashoffset:1,opacity:1},{strokeDashoffset:0,opacity:1,offset:.33},{strokeDashoffset:0,opacity:1,offset:.49},{strokeDashoffset:-1,opacity:1,offset:.99},{strokeDashoffset:-1,opacity:0}],{duration:450,delay,easing:'linear'});
+  }
+  return svg;
+}
+async function streakScreen(me,fromAll,{sheet=false}={}){
+  const st=$('#strk'),fl=$('#kFlame'),flOut=fl.querySelector('.out'),flIn=fl.querySelector('.in'),sh=$('#kShadow'),rays=$('#kRays'),
+        num=$('#kNum'),roll=$('#kRoll'),cap=$('#kCap'),paE=$('#kPaE'),paT=$('#kPaT'),cta=$('#kCta'),layer=$('#fly');
+  const sa=[],go=(el,kf,o)=>{const a=el.animate(kf,{fill:'both',...o});a.playbackRate=speed;me.anims.push(a);sa.push(a);return a;};
+  const steps=(el,from,list,delay)=>{const T=list.reduce((s,x)=>s+x[0],0),kf=[{...from,offset:0,easing:list[0][2]}];let acc=0;
+    list.forEach((st,i)=>{acc+=st[0];const k={...st[1],offset:Math.min(1,acc/T)};if(i+1<list.length)k.easing=list[i+1][2];kf.push(k);});return go(el,kf,{duration:T,delay});};
+  const wait=ms=>new Promise(r=>{const t0=performance.now();const tick=()=>{if(me.cancelled||me.skipSucc||performance.now()-t0>=ms/speed)return r();setTimeout(tick,16);};tick();});
+  const later=(ms,fn)=>setTimeout(()=>{if(!me.cancelled)fn();},ms/speed);
+  const full=!reduce&&P.key==='C',soft=!reduce&&P.key==='B',calm=reduce||P.key==='A';
+  me.skipSucc=false;
+  // výchozí stav: šedý plamen, 12 dní, Po–Čt v kapsli, pátek prázdný, tlačítko schované
+  setRoll(roll,[12]);$('#kLbl').textContent=plural(12)+' v řadě';
+  st.classList.toggle('sheet',sheet);
+  st.classList.add('on');
+  let tI=350;
+  if(sheet){
+    // karta vyjede zdola přes ztmavenou HP (HP zůstává vidět, uživatel je pořád „doma“)
+    const scr=$('#kScrim');scr.classList.add('on');
+    go(scr,[{opacity:0},{opacity:1}],{duration:300,easing:E.lin});
+    go(st,[{transform:'translateY(100%)'},{transform:'translateY(0)'}],{duration:420,easing:E.dec});
+    tI=420+250;
+  }
+  const G='#CFCFCF',GI='#BDBDBD',GN='#B8B8B8',O='#FF8C2E',OI='#FB6638',ON='#FF6904';
+  let peakT;
+  // ── zapálení plamene
+  if(full){
+    // poměry změřené na plameni série v Duolingu: smáčknutí, zbarvení, protažení, vznášení, dopad
+    const T=(y,sx,sy)=>({transform:`translateY(${y}px) scale(${sx},${sy})`});
+    steps(fl,T(0,1,1),[[70,T(0,1.28,.66),E.dec],[180,T(0,1.33,.64),E.lin],[50,T(-6,.92,1.42),E.dec],[160,T(-14,.96,1.3),E.dec],[40,T(0,1.36,.86),E.acc],[60,T(0,1.34,.88),E.lin],[90,T(0,.97,1.16),E.dec],[S.def.d,T(0,1,1),S.def.e]],tI);
+    steps(sh,{transform:'scaleX(1)'},[[70,{transform:'scaleX(1.18)'},E.dec],[180,{transform:'scaleX(1.2)'},E.lin],[50,{transform:'scaleX(.85)'},E.dec],[160,{transform:'scaleX(.78)'},E.dec],[40,{transform:'scaleX(1.25)'},E.acc],[60,{transform:'scaleX(1.22)'},E.lin],[S.def.d,{transform:'scaleX(1)'},S.def.e]],tI);
+    go(flOut,[{fill:G},{fill:'#FFC233',offset:.5},{fill:O}],{duration:180,delay:tI+70,easing:E.lin});
+    go(flIn,[{fill:GI},{fill:OI}],{duration:180,delay:tI+70,easing:E.lin});
+    peakT=tI+500;
+  }else if(soft){
+    const T=(y,sx,sy)=>({transform:`translateY(${y}px) scale(${sx},${sy})`});
+    steps(fl,T(0,1,1),[[80,T(0,1.16,.82),E.dec],[90,T(-6,.94,1.16),E.dec],[S.def.d,T(0,1,1),S.def.e]],tI);
+    go(flOut,[{fill:G},{fill:'#FFC233',offset:.5},{fill:O}],{duration:160,delay:tI+40,easing:E.lin});
+    go(flIn,[{fill:GI},{fill:OI}],{duration:160,delay:tI+40,easing:E.lin});
+    peakT=tI+170;
+  }else{
+    go(flOut,[{fill:G},{fill:O}],{duration:300,delay:tI,easing:E.lin});
+    go(flIn,[{fill:GI},{fill:OI}],{duration:300,delay:tI,easing:E.lin});
+    peakT=tI+150;
+  }
+  // ── číslo: jen změněná číslice spadne shora, „1“ se přebarví uprostřed přetočení
+  roll.innerHTML='<span class="rp">1</span><span class="rd"><span>3</span><span>2</span></span>';
+  const rd=roll.querySelector('.rd');
+  if(calm)go(rd,[{transform:'translateY(-48px)',opacity:1},{transform:'translateY(-48px)',opacity:0,offset:.5},{transform:'translateY(0)',opacity:0,offset:.5},{transform:'translateY(0)',opacity:1}],{duration:240,delay:peakT-120,easing:E.lin});
+  else steps(rd,{transform:'translateY(-48px)'},[[120,{transform:'translateY(2px)'},E.acc],[60,{transform:'translateY(0)'},E.dec]],peakT-120);
+  go(num,[{color:GN},{color:GN,offset:.5},{color:ON,offset:.5},{color:ON}],{duration:120,delay:peakT-120,easing:E.lin});
+  if(!calm)steps(num,{transform:'scale(1)'},[[90,{transform:`scale(${full?1.14:1.08})`},E.dec],[S.fast.d,{transform:'scale(1)'},S.fast.e]],peakT);
+  // ── paprsky a záblesk
+  go(rays,[{opacity:0},{opacity:1}],{duration:300,delay:peakT,easing:E.lin});
+  if(full)go(rays,[{transform:'scale(.7) rotate(0)'},{transform:'scale(1) rotate(3deg)',offset:.2},{transform:'scale(1) rotate(12deg)'}],{duration:2600,delay:peakT,easing:E.lin});
+  else if(soft)go(rays,[{transform:'scale(.7)'},{transform:'scale(1)'}],{duration:520,delay:peakT,easing:E.dec});
+  if(!calm){
+    burstOn(layer,go,200,283,peakT,{n:8,r0:72,len:18,w:3});
+    if(full)burstOn(layer,go,200,283,peakT+130,{n:8,r0:86,len:12,w:2.5,rot:22.5,cols:['#FFC233','#FF8C2E']});
+  }
+  later(peakT,()=>{fire({type:'h',v:'success',label:'Série +1'});fire({type:'s',v:'streak',label:'série'});});
+  // ── týden: pátek se připojí do kapsle (Duolingo: kapsle přestřelí o třetinu dne a vrátí se)
+  const tW=peakT+400;
+  if(calm)go(cap,[{width:'208px'},{width:'258px'}],{duration:240,delay:tW,easing:E.std});
+  else steps(cap,{width:'208px'},[[117,{width:full?'275px':'266px'},E.dec],[S.fast.d,{width:'258px'},S.fast.e]],tW);
+  go(paE,[{opacity:1},{opacity:0}],{duration:100,delay:tW+60,easing:E.lin});
+  if(calm)go(paT,[{opacity:0},{opacity:1}],{duration:240,delay:tW+60,easing:E.lin});
+  else{
+    go(paT,[{opacity:0},{opacity:1}],{duration:80,delay:tW+60,easing:E.lin});
+    steps(paT,{transform:'translateY(-18px) scale(1.5)'},[[140,{transform:'translateY(0) scale(1.08)'},E.dec],[S.fast.d,{transform:'translateY(0) scale(1)'},S.fast.e]],tW+60);
+    burstOn(layer,go,254,706,tW+200,{n:6,r0:26,len:7,w:2,cols:['#FF6904']});
+  }
+  if(full){ // světlo přeběhne celou kapslí: odměna za řetěz, ne jen za dnešek
+    const sw=$('#kSweep');go(sw,[{transform:'translateX(-90px)',opacity:1},{transform:'translateX(290px)',opacity:1}],{duration:670,delay:tW+350,easing:E.std});
+    later(tW+200,()=>fire({type:'h',v:'light',label:'Pátek v sérii'}));
+  }
+  // ── tlačítko až nakonec (Duolingo: CTA vždy poslední)
+  const tC=tW+(calm?300:500);
+  go(cta,[{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'translateY(0)'}],{duration:300,delay:tC,easing:E.dec});
+  await wait(tC+300+(fromAll?1500:1300));if(me.cancelled)return;
+  // klepnutí na „Jdeme na to!“ (v prototypu samo, nebo klepnutím na telefon)
+  go(cta,[{filter:'brightness(1)'},{filter:'brightness(.88)'},{filter:'brightness(1)'}],{duration:160,easing:E.lin});
+  await wait(120);if(me.cancelled)return;
+  // ── odchod: plamen odletí do počítadla v hlavičce HP
+  if(calm){
+    const out=sheet?go(st,[{transform:'translateY(0)'},{transform:'translateY(100%)'}],{duration:320,easing:E.acc}):go(st,[{opacity:1},{opacity:0}],{duration:240,easing:E.acc});
+    if(sheet)go($('#kScrim'),[{opacity:1},{opacity:0}],{duration:320,easing:E.lin});
+    await out.finished.catch(()=>{});
+  }else{
+    const ns='http://www.w3.org/2000/svg',cl=document.createElementNS(ns,'svg');
+    cl.setAttribute('width','101.63');cl.setAttribute('height','132');cl.setAttribute('viewBox','0 0 101.628 132');
+    const fr=fl.getBoundingClientRect(),pr=$('#phone').getBoundingClientRect(),fs=fitScale||1,fx0=(fr.left-pr.left)/fs,fy0=(fr.top-pr.top)/fs;
+    cl.style.cssText=`left:${fx0.toFixed(2)}px;top:${fy0.toFixed(2)}px;transform-origin:50.8px 58.1px`;
+    cl.innerHTML=`<circle class="in" cx="48.8991" cy="75.8893" r="32.1549" fill="${OI}"/><path class="out" d="${FLAME_D}" fill="${O}"/>`;
+    layer.appendChild(cl);me.flyEl=cl;
+    fl.style.visibility='hidden';
+    if(sheet){go(st,[{transform:'translateY(0)'},{transform:'translateY(100%)'}],{duration:320,easing:E.acc});go($('#kScrim'),[{opacity:1},{opacity:0}],{duration:320,easing:E.lin});}
+    else go(st,[{opacity:1},{opacity:0}],{duration:240,easing:E.acc});
+    const [tx,ty]=phonePt($('#hdrFire')),sx=fx0+50.8,sy=fy0+58.1,cx=300,cy=Math.min(200,sy-80),n=14,kf=[];
+    for(let i=0;i<=n;i++){const u=i/n,t=u*u*(3-2*u),x=(1-t)*(1-t)*sx+2*(1-t)*t*cx+t*t*tx,y=(1-t)*(1-t)*sy+2*(1-t)*t*cy+t*t*ty,s=1-.843*(1-(1-u)*(1-u));
+      kf.push({transform:`translate(${(x-sx).toFixed(1)}px,${(y-sy).toFixed(1)}px) scale(${s.toFixed(3)})`});}
+    const fly=go(cl,kf,{duration:560,easing:'linear'});
+    go(cl.querySelector('.out'),[{fill:O},{fill:'#FF6904'}],{duration:560,easing:E.lin});
+    go(cl.querySelector('.in'),[{opacity:1},{opacity:0,offset:.6},{opacity:0}],{duration:560,easing:E.lin});
+    await fly.finished.catch(()=>{});
+  }
+  if(me.cancelled)return;
+  st.classList.remove('on');$('#kScrim').classList.remove('on');
+  // úklid obrazovky (letící plamen zmizí až v okamžiku, kdy HP převezme dopad)
+  me.cleanStreak=()=>{sa.forEach(a=>a.cancel());layer.querySelectorAll('svg').forEach(s=>s.remove());fl.style.visibility='';me.flyEl=null;};
+}
+
+async function playAll(){
+  for(const s of [1,2,3]){
+    await playStep(s,{fromAll:true});
+    if(run&&run.cancelled)return;
+    await sleep(700);
+    if(current!==s)return;
+  }
+}
+
+/* ═══════════════════════ panel ═══════════════════════ */
+function markStep(s){document.querySelectorAll('.step').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.s===s)));}
+function describe(s){
+  const st=s===3&&showStreak&&streakOrder==='before'&&showRet,sa=s===3&&showStreak&&streakOrder==='after';
+  $('#specT').textContent=`${SEQ[s].title} · varianta ${P.key} ${P.name}`;$('#specS').textContent=sa?SEQ[3].subAfter:st?SEQ[3].subStreak:SEQ[s].sub[P.key];
+  drawCompare(s);
+  let bt=(sa?SEQ[3].beatsAfter:st?SEQ[3].beatsStreak:SEQ[s].beats[P.key]);
+  if(COIN()&&P.key!=='A'&&!reduce){
+    const note=s===1?[0,'Otočení mince: k uzlu žádná cesta nevede, mince se otočí hned a výchozím směrem. Dopad ve 375 ms, zbytek kroku se posune o 125 ms.','']
+      :[0,`Otočení mince: nejdřív zelená cesta doteče k uzlu ${arrivalDir(s===2?'A':'B').side} (375 ms, zrychluje, aby „ťukla“). Mince se otočí od strany příjezdu a dopadne v 750 ms. Následující časy jsou o 500 ms později.`,'Cesta i mince jsou jeden pohyb: čára doteče, mince se překlopí ve směru, kterým jela.'];
+    bt=[note,...bt];
+  }
+  $('#beats').innerHTML=bt.map(([t,a,w])=>`<li><span class="t">${t} ms</span><span>${a}${w?` <span class="why">${w}</span>`:''}</span></li>`).join('');
+}
+const ROWS=['Uzel 1','Uzel 2','Uzel 3','Uzel 4','Cesta','Vlna','Kroužek dne','Text','Další uzel','Otřes','Gramatika','Série','Částice'];
+function drawTimeline(c){
+  const total=Math.max(...c.tracks.map(t=>t.t0+t.T*t.iter),...c.events.map(e=>e.t))+80;
+  const used=ROWS.filter(r=>c.tracks.some(t=>t.row===r));
+  const pct=v=>(v/total*100).toFixed(3)+'%';
+  let h=`<div class="tl-ruler"><span></span><div class="ax">`;
+  for(let t=0;t<=total;t+=500)h+=`<span style="left:${pct(t)}">${t?(t/1000).toLocaleString('cs-CZ')+' s':'0'}</span>`;
+  h+=`</div></div><div class="tl-body">`;
+  used.forEach(r=>{
+    h+=`<div class="tl-row"><span class="lb">${r}</span><div class="tr">`;
+    const seen=new Set();
+    c.tracks.filter(t=>t.row===r).forEach(t=>{
+      if(t.hide)return;
+      const key=t.label+t.t0;if(seen.has(key))return;seen.add(key);
+      const dur=t.T*t.iter;
+      h+=`<span class="bar ${t.kind==='spring'?'spring':t.kind==='fx'?'fx':''}" style="left:${pct(t.t0)};width:${pct(dur)}" data-tip="${r}: ${t.label} · ${Math.round(t.t0)}–${Math.round(t.t0+dur)} ms"></span>`;
+    });
+    h+=`</div></div>`;
+  });
+  ['h','s'].forEach(k=>{
+    const evs=c.events.filter(e=>e.type===k);if(!evs.length)return;
+    h+=`<div class="tl-row"><span class="lb">${k==='h'?'Haptika':'Zvuk'}</span><div class="tr">`+
+      evs.map(e=>`<span class="ev ${k==='s'?'snd':''}" style="left:${pct(e.t)}" data-tip="${k==='h'?'Haptika':'Zvuk'}: ${e.label} (${e.v}) · ${e.t} ms"></span>`).join('')+`</div></div>`;
+  });
+  h+=`<span class="playhead" id="playhead"></span></div>`;
+  $('#tl').innerHTML=h;
+}
+$('#tl').addEventListener('mouseover',e=>{const t=e.target.closest('[data-tip]');$('#tlTip').textContent=t?t.dataset.tip:'';});
+
+/* zvuk — syntetické zástupné zvuky, jen pro ukázku rytmu.
+   Vše v jedné tónině (C dur), jako má Duolingo všechny odměny v jedné tónině (Fis dur),
+   aby se překrývající zvuky nikdy nehádaly. Kroky 1–3 hrají kadenci I – IV – V,
+   uzavření dne ji rozřeší na I. */
+let ac=null;
+function tone(f,t,d,g=.12,type='sine'){const o=ac.createOscillator(),v=ac.createGain();o.type=type;o.frequency.value=f;v.gain.setValueAtTime(0,t);v.gain.linearRampToValueAtTime(g,t+.006);v.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(v).connect(ac.destination);o.start(t);o.stop(t+d+.02);}
+// marimba: základ + oktáva + 4. harmonická s rychlým útlumem
+function note(f,t,d=.32,g=.09){tone(f,t,d,g,'sine');tone(f*2,t,d*.5,g*.22,'triangle');tone(f*4,t,d*.18,g*.12,'sine');}
+function sfx(name){
+  if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();
+  const t=ac.currentTime+.005,r=1/speed;
+  // znělka jako „správně“ v Duolingu: stoupající velká tercie, 125 ms, druhý tón hlasitější
+  const chime=(f)=>{note(f,t,.28,.065);note(f*1.26,t+.125*r,.4,.09);};
+  const N={C6:1046.5,E6:1318.5,F6:1396.9,G6:1568,C7:2093,E7:2637,G5:784};
+  if(name==='n1')chime(N.C6);   // I
+  if(name==='n2')chime(N.F6);   // IV
+  if(name==='n3')chime(N.G6);   // V
+  if(name==='day'){[N.C6,N.E6,N.G6,N.C7].forEach((f,i)=>note(f,t+i*.06*r,.55,.08));}   // I — kadence se uzavře
+  if(name==='thud'){ // tupé „bum“: nízký tón s rychlým poklesem a krátký šum
+    const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(55,t+.18);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.35,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+.28);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+.3);
+    const b=ac.createBuffer(1,ac.sampleRate*.15,ac.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,4);
+    const sN=ac.createBufferSource(),fl=ac.createBiquadFilter(),gN=ac.createGain();sN.buffer=b;fl.type='lowpass';fl.frequency.value=700;gN.gain.value=.25;sN.connect(fl).connect(gN).connect(ac.destination);sN.start(t);
+    note(1568,t+.12*r,.25,.04);}
+  if(name==='succ'){note(1568,t,.3,.06);note(2093,t+.09*r,.45,.08);}
+  if(name==='pop'){tone(N.C7,t,.07,.05,'sine');tone(N.E7,t+.03*r,.09,.045,'sine');}
+  if(name==='streak'){ // švih a otevřená kvinta přesně na dopad
+    const b=ac.createBuffer(1,ac.sampleRate*.25,ac.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+    const s=ac.createBufferSource(),fl=ac.createBiquadFilter(),g=ac.createGain();s.buffer=b;fl.type='bandpass';fl.frequency.setValueAtTime(900,t);fl.frequency.exponentialRampToValueAtTime(3200,t+.18);g.gain.value=.12;s.connect(fl).connect(g).connect(ac.destination);s.start(t);
+    note(N.C6,t,.45,.08);note(N.G6,t,.45,.06);}
+}
+
+/* pravidla, gradace, tokeny, otázky */
+$('#rules').innerHTML=[
+  '<b>Oslava se přehraje až na HP.</b> Po splnění se uloží příznak „čeká oslava“. HP se po návratu vykreslí ve stavu před splněním, počká na dosednutí přechodu a dalších 300 ms a animaci přehraje jednou. Když uzel není vidět, HP k němu nejdřív odroluje. Když uživatel už scrolluje nebo je splnění staré, ukáže se rovnou koncový stav.',
+  '<b>Gradace 1 &lt; 2 &lt; 3.</b> Kroky 1 a 2 ukazují cestu dál, 3/3 je jediný velký moment dne. Procvičování nejde dokončit, po 3/3 se jen hravě odkryje. Podle pravidla vrcholu a konce si člověk pamatuje hlavně vrchol a závěr.',
+  '<b>Odměny chodí po jedné.</b> Nejdřív se uzavře kroužek dne, pak plamínek doletí k sérii a ta se změní až po jeho dopadu. Uživatel tak vidí, odkud odměna přišla.',
+  '<b>Nečekat na server.</b> Stav se zapíše lokálně a animace jede hned, synchronizace běží na pozadí. Duolingo tím snížilo vnímané čekání na konci lekce o víc než 60 %.',
+  '<b>Pohyb vede k dalšímu kroku.</b> Žlutá cesta „teče“ k dalšímu uzlu a končí na něm. Svatozář pozve dvakrát a pak je klid, žádné nekonečné blikání.',
+  '<b>Jedna kostra pro všechny kroky, změřená na uzlu Duolinga.</b> Svatozář se za 90 ms vsákne do uzlu, uzel se zmáčkne na 88 % a vyskočí na 106 %. Ikona dobíhá o 40 ms později a na vrcholu vyrazí záblesk. Uživatel se kostru naučí, a díky tomu je gradace čitelná.',
+  '<b>Rytmus a jedna tónina.</b> Haptika a zvuky leží na mřížce 125/250 ms (šestnáctiny a osminy při 120 BPM). Znělka kroku je stoupající velká tercie po 125 ms jako „správně“ v Duolingu. Kroky 1–3 hrají kadenci I – IV – V a uzavření dne ji rozřeší na I, takže je postup dne slyšet i bez dívání.',
+  '<b>Pružiny jen pro polohu a velikost, barva a průhlednost nepřestřelují.</b> Pravidlo Material 3 Expressive (spatial × effects). Tokeny jsou přímo z M3, jen vrchol dne má vlastní „hero“.',
+  '<b>Haptika je interpunkce:</b> nejvýš 2–3 impulzy na krok a vždy na vrcholu pohybu, nejpozději 50 ms po něm (dřív než 15 ms před ním se nesmí). Zvuk jde se stejným okamžikem.',
+  '<b>Nikdy neblokovat.</b> Klepnutí kamkoli animaci dokončí do koncového stavu a HP jde ovládat po celou dobu.',
+  '<b>Omezený pohyb</b> (iOS Reduce Motion, Android „Odstranit animace“): stejné stavy, jen prolnutí 240 ms. Bez poskoků, pružin a částic, haptika zůstává.',
+  '<b>Flat a v barvách HP.</b> Jiskry jsou plochý tah (paprsky a kosočtverečky), ne lesk. Konfety jsou jen jednou denně u 3/3, žluté a zelené s plátky citronu, a vylétají z kroužku, ne přes celou obrazovku.',
+].map(x=>`<li>${x}</li>`).join('');
+$('#tokens').innerHTML='<tr><th>Token</th><th>Hodnota</th><th>Kde</th></tr>'+[
+  ['fast','M3 Expressive · fast spatial','pop dalšího uzlu, poskok ve vlně, odznak, plamen pátku',S.fast],
+  ['default','M3 Expressive · default spatial','dosednutí splněného uzlu, zhoupnutí ikony',S.def],
+  ['hero','vlastní, jen 3/3','pumpnutí kroužku, plamen v hlavičce',S.hero],
+].map(([n,src,w,s])=>`<tr><td><code>${n}</code><br><span style="color:var(--stage-dim)">${src}</span></td><td>tlumení ${String(s.z).replace('.',',')} · tuhost ${s.k}<br><span style="color:var(--stage-dim)">SwiftUI <code>.spring(response: ${s.resp}, dampingFraction: ${s.z})</code><br>Compose <code>spring(${s.z}f, ${s.k}f)</code><br>vrchol ${peak(s)} ms · dozvuk ≈ ${s.d} ms</span></td><td>${w}</td></tr>`).join('')+[
+  ['decelerate','cubic-bezier(.05,.7,.1,1)','příchody, výplně uzlu, zpráva o kartě'],
+  ['accelerate','cubic-bezier(.3,0,.8,.15)','odchody, nádech uzlu, dojezd kroužku do 3/3'],
+  ['standard','cubic-bezier(.2,0,0,1)','kroužek 1/3 a 2/3, přetočení čísel'],
+  ['draw','cubic-bezier(.65,0,.35,1)','nalití cesty'],
+].map(([n,v,w])=>`<tr><td><code>${n}</code></td><td><code>${v}</code></td><td>${w}</td></tr>`).join('');
+$('#questions').innerHTML=[
+  '<b>Série 12 → 13.</b> Ve Figmě zůstává ve stavu 3/3 číslo 12 a mění se jen barva. Navrhuji, aby po splnění dne číslo naskočilo, jako v Duolingu. Pokud 12 už dnešek započítává, zůstane jen zapálení plamene.',
+  '<b>Pátek v liště dnů.</b> Ve Figmě má i stav 3/3 pátek jako čárkovaný kruh. V animaci se mění na plamen a stejně by to mělo být ve statickém stavu 3/3.',
+  '<b>Tykání ve stavu 3/3.</b> „Pecka, máš hotovo!“ tyká, zbytek karty vyká. Prototyp přebírá text z Figmy beze změny.',
+  '<b>Zpráva o gramatické kartě</b> ve stavu 3/3 ve Figmě není. Prototyp ji při návratu z testu bere jako zavřenou.',
+  '<b>Série za lekci, nebo za celý den?</b> Ve Figmě se plamen zapálí až při 3/3. Duolingo sérii od denního cíle oddělilo: prodlouží ji už jedna lekce a retence po 14 dnech stoupla o 3,3 %. Kdybyste šli stejnou cestou, zapálení plamene se přesune do kroku 1 a 3/3 si nechá kroužek a konfety. Animace jsou z bloků, takže to jde bez předělávky.',
+  '<b>Vzácná varianta (návrh na později).</b> Na milnících série (7, 30, 100 dní) může mít 3/3 jinou oslavu, podobně jako u příležitostných oslav v Asaně. V nastavení by šly oslavy vypnout.',
+].map(x=>`<li>${x}</li>`).join('');
+
+const L=(u,t)=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`;
+$('#research').innerHTML=[
+  `<b>Duolingo slaví místo čekání.</b> Konec lekce ukáže oslavu hned a síťové volání běží za ní. Vnímané čekání kleslo o víc než 60 % (${L('https://blog.duolingo.com/android-app-performance/','blog Duolinga')}).`,
+  `<b>Na animaci série záleží.</b> Nová animace prodloužení série zvedla retenci nováčků po 7 dnech o 1,7 %. Nejvíc se slaví první dny (ze 2 na 3 dny je to +50 %), velké oslavy jsou jen na milnících (${L('https://blog.duolingo.com/how-duolingo-streak-builds-habit/','blog Duolinga')}).`,
+  `<b>Plamen série v Duolingu</b> (rozebráno po snímcích). Šedý plamen se smáčkne do placky (asi 100 ms) a zbarví do oranžové (150 ms). Pak se vytáhne a asi 250 ms visí. Dopadne smáčknutý a teprve tehdy naskočí nové číslo a odletí jiskry (asi 600 ms) (${L('https://60fps.design/shots/duolingo-2-day-streak-animation','60fps.design')}).`,
+  `<b>Odměny po jedné.</b> Drahokamy z denního úkolu letí k počítadlu s rozestupem 50 ms a každý přičte 1 až při dopadu (${L('https://60fps.design/shots/duolingo-daily-quest-complete-trail-animation','60fps.design')}).`,
+  `<b>Uzel na cestě Duolinga.</b> Uzel se zmáčkne, pak pop s přestřelením a asi 400 ms jiskřiček. Celý beat trvá zhruba 1,3 s, potom se cesta asi za 500 ms posune k další jednotce (${L('https://60fps.design/shots/duolingo-section-unit-complete-trophy-morph-animation','60fps.design')}).`,
+  `<b>Gradace v Duolingu:</b> reakce postavy, pak N správně v řadě, konec lekce, série +1 a nakonec milník přes celou obrazovku (asi 6 s). Páky intenzity jsou velikost plochy, barva pozadí, proměna postavy, částice a delší pauza před tlačítkem.`,
+  `<b>Varování z Duolinga.</b> Jedna lekce umí zřetězit asi 11 obrazovek s „Pokračovat“ a existují rozšíření, která je proklikávají. U nás proto nic neblokuje.`,
+  `<b>Headspace, záložka Today.</b> Čárkovaná časová osa: hotovo je zelená fajfka, aktuální krok plná tečka. Po návratu ze cvičení se „aktuální“ předá dalšímu kroku. Je to skoro náš komponent (${L('https://mobbin.com/flows/7763b37d-c5e6-4394-9471-f8f1823c9fc7','Mobbin')}).`,
+  `<b>Časy (NN/g).</b> Odezva do 100 ms, běžné animace 100–400 ms. Od 500 ms výš pohyb působí jako zdržení, proto mají opakované kroky hlavní část kolem 1 s (${L('https://www.nngroup.com/articles/animation-duration/','NN/g')}).`,
+  `<b>Pružiny.</b> Apple: odskok nad 0,4 působí u UI přehnaně (${L('https://developer.apple.com/videos/play/wwdc2023/10158/','WWDC23')}). Material 3 Expressive má pružiny pro polohu a velikost, ale barva a průhlednost nepřestřelují (${L('https://m3.material.io/styles/motion/overview','M3')}).`,
+  `<b>Synchronizace.</b> Haptiku do 50 ms po obrazu nikdo nepozná, 15 ms před ním už ano. Proto jde haptika na vrchol pohybu (${L('https://research.facebook.com/publications/perceptual-limits-of-visual-haptic-simultaneity-in-virtual-reality-interactions/','Meta Research')}).`,
+  `<b>Ukazatel postupu</b> působí rychleji, když ke konci zrychluje. Zastavení těsně před cílem lidé vnímají jako nejpomalejší (${L('https://www.chrisharrison.net/projects/progressbars/ProgBarHarrison.pdf','Harrison, UIST 2007')}).`,
+  `<b>Kdy oslava škodí.</b> Robinhood konfety odstranil po kritice gamifikace a Strava stáhla točící se kudos po stížnostech, že z toho je lidem špatně. Asana slaví jen občas a dá se to vypnout (${L('https://asana.com/inside-asana/new-celebrations','Asana')}).`,
+].map(x=>`<li>${x}</li>`).join('');
+
+/* ═══════════════════════ porovnání variant ═══════════════════════ */
+function metrics(c){
+  const inv=t=>/^pozvání/.test(t.label||'');
+  const main=c.tracks.filter(t=>!inv(t));
+  const end=Math.round(Math.max(...main.map(t=>t.t0+t.T)));
+  const objs=new Set(main.filter(t=>t.kind!=='fx').map(t=>t.row));
+  let mx=0;
+  for(let t=0;t<=end;t+=10){const s=new Set();main.forEach(k=>{if(k.kind!=='fx'&&k.t0<=t&&t<k.t0+k.T)s.add(k.row)});mx=Math.max(mx,s.size);}
+  const f=[...c.focus].sort((a,b)=>a.t-b.t);let path=0;
+  for(let i=1;i<f.length;i++)path+=Math.hypot(f[i].x-f[i-1].x,f[i].y-f[i-1].y);
+  // největší deformace tvaru (jen prvky, které se zmáčknou nebo pumpnou)
+  const shaped=new Set([...N.map(n=>n.bob),...N.map(n=>n.ico),$('#ring'),$('#ringB'),$('#streakNum'),$('#hdrFire'),$('#today')]);
+  let amp=0;
+  c.tracks.forEach(t=>{if(!shaped.has(t.el))return;t.kf.forEach(k=>{const m=/scale\(([\d.]+)(?:,\s*([\d.]+))?\)/.exec(k.transform||'');if(!m)return;
+    [m[1],m[2]??m[1]].forEach(v=>{v=+v;if(v>.3)amp=Math.max(amp,Math.abs(v-1));});});});
+  return {end,focus:f.length,path:Math.round(path),objs:objs.size,mx,parts:c.tracks.filter(t=>t.kind==='fx').length,
+    hapt:c.events.filter(e=>e.type==='h').length,amp:Math.round(amp*100)};
+}
+const preState=s=>s===3?2:s-1;
+function measure(s,key){
+  const keep=P;P=VAR[key];
+  let m;
+  if(s===3&&showStreak&&streakOrder==='after'){
+    const c1=ctx();c1.phase='before';SEQ[3].build(c1);const m1=metrics(c1);c1.temp.forEach(p=>p.remove());
+    const c2=ctx();c2.phase='after';SEQ[3].build(c2);const m2=metrics(c2);c2.temp.forEach(p=>p.remove());
+    m={end:m1.end+m2.end,focus:m1.focus+m2.focus,path:m1.path+m2.path,objs:m1.objs+m2.objs,mx:Math.max(m1.mx,m2.mx),parts:m1.parts+m2.parts,hapt:m1.hapt+m2.hapt,amp:Math.max(m1.amp,m2.amp)};
+    P=keep;render(preState(s));$('#banner').classList.remove('on');$('#badge').classList.remove('on');return m;
+  }
+  const c=ctx();c.afterStreak=s===3&&showRet&&showStreak&&streakOrder==='before';SEQ[s].build(c);m=metrics(c);
+  c.temp.forEach(p=>p.remove());P=keep;
+  render(preState(s));if(s===3){$('#banner').classList.remove('on');$('#badge').classList.remove('on');}
+  return m;
+}
+let MET=null;
+function measureAll(){
+  if(run)return;
+  const r={};
+  ['A','B','C'].forEach(k=>{r[k]={};[1,2,3].forEach(s=>r[k][s]=measure(s,k));});
+  MET=r;render(preState(current));
+}
+const fmtS=ms=>(ms/1000).toLocaleString('cs-CZ',{minimumFractionDigits:1,maximumFractionDigits:1})+' s';
+function drawCompare(s){
+  if(!MET)return;
+  const rowsDef=[
+    ['Délka (bez pozvání)',m=>fmtS(m.end)],
+    ['Zastávky oka',m=>m.focus],
+    ['Dráha oka',m=>m.path+' px'],
+    ['Pohyblivé části',m=>m.objs],
+    ['Nejvíc najednou',m=>m.mx],
+    ['Částice (kusů)',m=>m.parts],
+    ['Haptické impulzy',m=>m.hapt],
+    ['Největší deformace',m=>m.amp?('± '+m.amp+' %'):'0'],
+  ];
+  const day=k=>{const t={end:0,parts:0,hapt:0,path:0};[1,2,3].forEach(i=>{const m=MET[k][i];t.end+=m.end;t.parts+=m.parts;t.hapt+=m.hapt;t.path+=m.path;});return t;};
+  let h=`<tr><th>Krok ${s}</th>${['A','B','C'].map(k=>`<th class="${k===P.key?'cur':''}">${k} · ${VAR[k].name}</th>`).join('')}</tr>`;
+  rowsDef.forEach(([lbl,fn])=>{h+=`<tr><td>${lbl}</td>${['A','B','C'].map(k=>`<td class="${k===P.key?'cur':''}">${fn(MET[k][s])}</td>`).join('')}</tr>`;});
+  h+=`<tr class="sum"><td>Den 1–3 celkem</td>${['A','B','C'].map(k=>{const d=day(k);return `<td class="${k===P.key?'cur':''}">${fmtS(d.end)} · ${d.hapt} haptik · ${d.parts} částic</td>`;}).join('')}</tr>`;
+  $('#compare').innerHTML=h;
+  const c3=MET.C[3],b3=MET.B[3];
+  $('#diag').innerHTML=`Ve variantě C pošle krok 3 oko na <b>${c3.focus} míst</b> s dráhou <b>${c3.path} px</b>, rozpohybuje <b>${c3.objs} částí</b> HP a vypustí <b>${c3.parts} částic</b> během ${fmtS(c3.end)}. Ve variantě B je to ${b3.focus} místa, ${b3.path} px, ${b3.objs} částí a ${b3.parts} částic za ${fmtS(b3.end)}.`;
+}
+function setVariant(k){
+  P=VAR[k];
+  document.querySelectorAll('#vars button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===k)));
+  if(run)stopRun();
+  render(preState(current));
+  describe(current);
+  const c=ctx();if(current===3&&showStreak&&streakOrder==='after')c.phase='before';else c.afterStreak=current===3&&showRet&&showStreak&&streakOrder==='before';SEQ[current].build(c);drawTimeline(c);c.temp.forEach(p=>p.remove());render(preState(current));
+  if(current===3){$('#banner').classList.remove('on');$('#badge').classList.remove('on');}
+}
+$('#analysis').innerHTML=`
+  <h4>Proč C působí jako „moc“</h4>
+  <p class="sub" id="diag"></p>
+  <ul class="notes">
+    <li><b>Problém není síla pohybu, ale počet míst.</b> Duolingo dává každý beat (série, kalendář, odměna) na vlastní obrazovku, kde oko stojí na jednom místě. Na HP se stejné množství rozprskne po celé ploše a oko přeskakuje mezi uzlem, kroužkem, hlavičkou a lištou dnů.</li>
+    <li><b>Koření na každém kroku.</b> Záblesky, kosočtverečky, tekoucí čárky a pozvání jsou každé zvlášť drobnost. Dohromady ale tvoří vrstvu dekorace, která se opakuje každý den.</li>
+    <li><b>Amplitudy pro jednorázový moment.</b> Plamen na 142 %, číslo na 116 %: na milník série správně, na každodenní rituál moc.</li>
+    <li><b>Frekvence.</b> Kroky 1–3 uživatel uvidí třikrát denně, stovkykrát za rok. Co nadchne poprvé, po týdnu otravuje (NN/g). Strava proto stáhla točící se kudos.</li>
+  </ul>
+  <h4>Jak dávkovat, aby to bylo chytlavé a ne „moc“</h4>
+  <ol class="notes">
+    <li><b>Jedno ohnisko na krok.</b> Krok má jednoho hrdinu, ostatní změny jen tiše dosednou. Material 3 na to má dvě sady pohybu: standard pro opakované interakce, expressive pro hrdinské momenty.</li>
+    <li><b>Oko po cestě.</b> Ohniska blízko sebe a ve směru čtení. Vzdálené změny (lišta dnů) tiše, ne ve stejném okamžiku jako hlavní moment.</li>
+    <li><b>Odměnou je změna stavu.</b> Zelená, číslo a plamen jsou samy odměnou. Částice jsou koření: nejvýš jedno na krok a ne na každém kroku.</li>
+    <li><b>Amplituda podle četnosti.</b> Denně přestřelení 3–6 % a deformace do 15 %. Na milníku klidně 40 %. Apple: odskok nad 0,4 působí u UI přehnaně.</li>
+    <li><b>Rozpočet času.</b> Opakovaný krok kolem 1 s, uzavření dne do 2 s včetně dozvuku pružin. Delší jen u milníků.</li>
+    <li><b>Haptika 1–2 impulzy na krok,</b> „úspěch“ jen jednou denně.</li>
+    <li><b>Novost vyprchává.</b> Duolingo slaví nejvíc první dny série a na milnících, běžný den má jen „počítadlo +1“. Plnou show proto šetřit.</li>
+    <li><b>Test stého dne:</b> bude to bavit i po stém? (Apple navrhuje pro první i stý zážitek.)</li>
+  </ol>
+  <h4>Co na to Duolingo samo</h4>
+  <ul class="notes">
+    <li>Mezi pěti zásadami jejich motion týmu jsou dvě o střídmosti: <b>pohyb má odpovídat účelu</b>, žádné ozdoby samy pro sebe, a <b>jít rovnou k věci</b>, šetřit čas a nezahrabávat odměnu pod efekty (<a href="https://www.linkedin.com/posts/samiakhalaf_duolingocreator-duolingodesign-designstudio-activity-7486054269264203776-XugE" target="_blank" rel="noopener">Duolingo Design Studio</a>).</li>
+    <li><b>Stav se mění v jednom snímku.</b> Políčko zezelená naráz, jeden snímek po nejhlubším smáčknutí, bez prolínání. „Šťáva“ je kolem přepnutí, ne v něm. Varianta B to tak dělá.</li>
+    <li><b>Konfety jsou řídké:</b> 3–8 kusů, dva tvary, dvě barvy a do 0,6 s pryč. I milník v C má proto jen 8 konfet.</li>
+    <li><b>Počítadlo přetočí jen změněnou číslici.</b> Nová spadne shora za 70–80 ms a krátce podklesne.</li>
+  </ul>
+  <h4>Doporučení</h4>
+  <p class="sub"><b>B jako výchozí</b> každý den. <b>C jen na milnících série</b> (první den, 7., 30., 100.) a při prvním splnění dne po instalaci. Plná show tak zůstane vzácná a bude mít váhu. <b>A</b> se hodí pro nastavení „Méně animací“ a pro případ, kdy je splnění staré (aplikace byla zavřená) a oslava by přišla pozdě.</p>`;
+
+/* ovládání */
+$('#vars').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setVariant(b.dataset.v);});
+$('#pathMode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;PATHMODE=b.dataset.v;
+  document.querySelectorAll('#pathMode button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  if(run)stopRun();measureAll();setVariant(P.key);});
+$('#steps').addEventListener('click',e=>{const b=e.target.closest('.step');if(b)playStep(+b.dataset.s);});
+$('#again').onclick=()=>playStep(current);
+$('#all').onclick=()=>playAll();
+$('#speed').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;speed=+b.dataset.v;
+  document.querySelectorAll('#speed button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  if(run){run.anims.forEach(a=>a.updatePlaybackRate(speed));run.master&&run.master.updatePlaybackRate(speed);}});
+$('#optRet').onchange=e=>showRet=e.target.checked;
+$('#optDots').onchange=e=>slowSave=e.target.checked;
+$('#nodeMode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;NODEMODE=b.dataset.v;
+  document.querySelectorAll('#nodeMode button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  if(run)stopRun();measureAll();setVariant(P.key);});
+$('#streakMode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  showStreak=b.dataset.v!=='off';if(showStreak)streakOrder=b.dataset.v;
+  document.querySelectorAll('#streakMode button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  if(run)stopRun();measureAll();setVariant(P.key);});
+$('#optRet').addEventListener('change',()=>{if(run)stopRun();measureAll();setVariant(P.key);});
+$('#optSound').onchange=e=>{sound=e.target.checked;if(sound&&!ac)ac=new (window.AudioContext||window.webkitAudioContext)();};
+$('#optReduce').checked=reduce;
+$('#optReduce').onchange=e=>{reduce=e.target.checked;playStep(current);};
+$('#phone').addEventListener('click',skip);
+
+/* přizpůsobení velikosti telefonu oknu */
+function fit(){
+  const vw=document.documentElement.clientWidth||innerWidth;
+  const w=Math.min(1,(Math.min(vw,1180)-32)/400),h=Math.min(1,(innerHeight-110)/908);
+  fitScale=Math.max(.5,vw<900?w:Math.min(w,h));
+  $('#phone').style.transform=`scale(${fitScale})`;
+  $('#fit').style.width=400*fitScale+'px';$('#fit').style.height=908*fitScale+'px';
+}
+addEventListener('resize',fit);addEventListener('load',fit);fit();
+
+render(0);describe(1);markStep(1);
+measureAll();setVariant('B');
+</script>
+</body>
+</html>
