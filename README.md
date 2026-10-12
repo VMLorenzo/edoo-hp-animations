@@ -40,7 +40,7 @@ V2 působila jako „moc“, proto jsou v prototypu tři varianty se stejnou kos
 | | A · Klidná | B · Vyvážená (doporučená) | C · Výrazná (milníky) |
 |---|---|---|---|
 | Uzel | výplň od středu, bez přestřelení | zmáčknutí 93 %, na dně zezelená v jednom snímku, výskok 103 %, ikona dobíhá | 88 % → 106 %, výplň od středu, ikona 82 → 114 %, záblesk |
-| Další uzel | prolnutí | nádech 103,5 %, svatozář, 1 pozvání | nádech 107 %, 2 pozvání, tekoucí čárky |
+| Další uzel | prolnutí, pak dýchá | nádech 103,5 %, svatozář, pak dýchá | nádech 107 %, tekoucí čárky, pak dýchá |
 | 3/3 kroužek | uzavře se a zezelená | zrychlí, zezelená, tah 6 px, pumpne 106 %, 1 záblesk | tah 7 px, pumpne 110 %, 3 záblesky, 8 konfet |
 | Série | prolnutí | krátké smáčknutí a protažení (112 %) | plamínek doletí + plamen podle Duolinga (142 %) |
 | Pátek v liště | prolnutí | plamen tiše naskočí | nádech a překlopení |
@@ -61,7 +61,7 @@ Krok 3 je delší než dřív, protože obsahuje i přistání plamene z karty s
 
 ### Proč C působí jako „moc“
 - **Problém není síla pohybu, ale počet míst.** Duolingo dává každý beat na vlastní obrazovku, kde oko stojí. Na HP se stejné množství rozprskne a oko skáče mezi uzlem, kroužkem, hlavičkou a lištou dnů.
-- **Koření na každém kroku.** Záblesky, kosočtverečky, tekoucí čárky a pozvání se opakují každý den.
+- **Koření na každém kroku.** Záblesky, kosočtverečky a tekoucí čárky se opakují každý den.
 - **Amplitudy pro jednorázový moment.** Plamen 142 % a číslo 116 % patří k milníku, ne k běžnému dni.
 
 ### Pravidla dávkování
@@ -106,7 +106,26 @@ V prototypu se dá přepnout:
 - **Proč „dokreslí se“:** je to jeden pohyb s nejjasnější metaforou („prošel jsem“) a sedí ke střídmé variantě B. Zacvaknutí ukazuje proměnu čárek doslova, ale má dvě fáze, tedy víc pohybu.
 - **Přístupnost:** hotové a další úseky se dnes liší jen barvou (zelená × žlutá čárkovaná). S plnou čarou se liší i stylem, takže je rozliší i člověk se sníženým vnímáním barev (WCAG 1.4.1).
 - **Dopad do Figmy:** statické stavy 2/3 a 3/3 by měly mít plnou zelenou čáru. Je to nový stav cesty „prošlá“.
-- U plné čáry odpadá v kroku 4 varianty C „pochod“ zelených čárek, protože plná čára nemá čím pochodovat.
+
+## Aktivní krok dýchá
+
+Svatozář kolem žlutého aktivního uzlu je tu proto, aby přitáhla oko. V klidovém stavu HP proto pomalu dýchá, dokud uživatel na krok neklepne. Nahrazuje dřívější jednorázové „pozvání“ vlnkou, aby jeden prvek neměl dva různé pulzy.
+
+| Část cyklu (2600 ms) | Co se děje |
+|---|---|
+| 0–35 % (910 ms) | svatozář se rozšíří na 107 % a zesílí: druhý stejný prstenec (žlutá 40 %) se prolne z 0 na 1, dohromady asi 64 % |
+| 35–75 % (1040 ms) | vrátí se na 100 % a druhý prstenec zmizí |
+| 75–100 % (650 ms) | stojí |
+
+- **Křivka:** `cubic-bezier(.37,0,.63,1)` (sinus) na obou půlkách. Žádné blikání, žádné vlny ven, pohybuje se jen velikost a průhlednost (dá se počítat na GPU).
+- **Proč takhle:** zve ke klepnutí, ale nekřičí. Pomalý dech (asi 23 za minutu) působí živě a nenaléhavě, rychlejší pulz už vypadá jako varování.
+- **Kdy nedýchá:**
+  - během oslavy: dech se zastaví na začátku a po ní začne znovu od klidu, takže nic neskočí;
+  - u Procvičování po 3/3: den je hotový a nic by nemělo naléhat (viz otevřené otázky);
+  - při omezeném pohybu;
+  - když HP není vidět nebo je aplikace na pozadí.
+- Dech je klidový stav HP, ne oslava, proto ho mají všechny tři varianty.
+- V prototypu jde vypnout přepínačem „Dýchání aktivního kroku“.
 
 ## Otočení mince (nástřel)
 
@@ -219,7 +238,7 @@ Pohyb:
 3. **Výskok:** za 150 ms vyskočí na 106 % (decelerate), pak dosedne pružinou M3 Expressive default.
 4. **Výplň a ikona:** zelená se rozlije od středu (220 ms) a ikona zbělá. Ikona dobíhá o 40 ms později (82 % → 114 % → 100 %). To je překrývající se pohyb: celek a detail nedorazí najednou.
 5. **Vrchol v 250 ms:** lehká haptika, tón kroku a **záblesk**. Paprsky střídavě dlouhé a krátké, žluté a zelené, vyrazí ven, 70 ms drží a smažou se směrem od uzlu.
-6. **Štafeta:** cesta k dalšímu uzlu se nalije žlutou a čárky krátce tečou k cíli. Další uzel se nadechne na 107 %, zežloutne a svatozář z něj vyroste (M3 Expressive fast). Ve 750 ms přijde haptika selection. Uzel dvakrát pozve vlnkou a pak je klid.
+6. **Štafeta:** cesta k dalšímu uzlu se nalije žlutou a čárky krátce tečou k cíli. Další uzel se nadechne na 107 %, zežloutne a svatozář z něj vyroste (M3 Expressive fast). Ve 750 ms přijde haptika selection. Pak svatozář v klidu dýchá (viz [Aktivní krok dýchá](#aktivní-krok-dýchá)).
 
 ## Kroky v milisekundách
 
@@ -236,7 +255,7 @@ Pohyb:
 | 500 | číslo 0 → 1 se přetočí a při dopadu ťukne (116 %) |
 | 620 | uzel Slova: nádech 107 %, žlutá výplň, svatozář vyroste |
 | **750** | **haptika selection** |
-| 1420 | 2× pozvání, pak klid |
+| 1180 | svatozář dosedne a začne dýchat |
 
 ### 2 · Slova z lekce (hlavní část ≈ 0,9 s, karta do 1,4 s)
 Stejná kostra a k tomu:
@@ -279,15 +298,17 @@ Edoo stojí na Material 3, proto jsou pružiny přímo z M3 Expressive (androidx
 
 | Token | Tlumení / tuhost | SwiftUI | Compose | Použití |
 |---|---|---|---|---|
-| `fast` (M3 Expressive fast spatial) | 0,6 / 800 | `.spring(response: 0.222, dampingFraction: 0.6)` | `spring(0.6f, 800f)` | pop dalšího uzlu, poskok, odznak, plamen pátku |
-| `default` (M3 Expressive default spatial) | 0,8 / 380 | `.spring(response: 0.322, dampingFraction: 0.8)` | `spring(0.8f, 380f)` | dosednutí splněného uzlu |
-| `hero` (vlastní, jen 3/3) | 0,5 / 420 | `.spring(response: 0.307, dampingFraction: 0.5)` | `spring(0.5f, 420f)` | pumpnutí kroužku, plamen v hlavičce |
+| `fast` (M3 Expressive fast spatial) | 0,6 / 800 | `.spring(response: 0.222, dampingFraction: 0.6)` | `spring(0.6f, 800f)` | pop dalšího uzlu, svatozář, poskok, odznak, plamen pátku |
+| `default` (M3 Expressive default spatial) | 0,8 / 380 | `.spring(response: 0.322, dampingFraction: 0.8)` | `spring(0.8f, 380f)` | dosednutí mince a splněného uzlu, odpružení Procvičování po žuchnutí, dosednutí plamene v hlavičce |
+| `hero` (vlastní, jen 3/3) | 0,5 / 420 | `.spring(response: 0.307, dampingFraction: 0.5)` | `spring(0.5f, 420f)` | pumpnutí kroužku |
 
 Křivky:
 - decelerate `cubic-bezier(.05,.7,.1,1)`: příchody a výplně;
 - accelerate `cubic-bezier(.3,0,.8,.15)`: odchody, nádech a dojezd kroužku do 3/3;
 - standard `cubic-bezier(.2,0,0,1)`: kroužek a čísla;
-- draw `cubic-bezier(.65,0,.35,1)`: nalití cesty.
+- draw `cubic-bezier(.65,0,.35,1)`: nalití cesty, druhá půlka otočení mince, otočení Procvičování;
+- breath `cubic-bezier(.37,0,.63,1)`, cyklus 2600 ms: dech svatozáře aktivního kroku;
+- arrive `cubic-bezier(.45,0,.9,.6)`: zelená cesta dojíždí k minci, ke konci zrychlí a „ťukne“.
 
 Pružiny se používají jen pro polohu a velikost. Barva a průhlednost nikdy nepřestřelují.
 
@@ -312,7 +333,8 @@ Haptika a zvuk patří na vrchol pohybu, nejpozději 50 ms po něm. Dřív než 
   - Když uživatel už scrolluje nebo je splnění staré (aplikace byla zavřená), ukáže se rovnou koncový stav.
 - **Nečekat na server.** Stav se zapíše lokálně, animace jede hned a synchronizace běží na pozadí.
 - **Nikdy neblokovat.** Klepnutí kamkoli animaci dokončí do koncového stavu. HP jde ovládat po celou dobu.
-- **Omezený pohyb** (iOS Reduce Motion, Android „Odstranit animace“): stejné stavy, jen prolnutí 240 ms. Bez poskoků, pružin a částic. Haptika zůstává.
+- **Omezený pohyb** (iOS Reduce Motion, Android „Odstranit animace“): stejné stavy, jen prolnutí 240 ms. Bez poskoků, pružin a částic, svatozář nedýchá. Haptika zůstává.
+- **Dech svatozáře** je nekonečná animace, proto běží jen tehdy, když je uzel vidět a aplikace je v popředí. Po oslavě začíná vždy od klidového stavu.
 - **Technika.**
   - Uzly, cesty, kroužek a čísla jsou nativní pružiny (SwiftUI `Spring`, Compose `MotionScheme.expressive()`). Řídí se tokeny a omezený pohyb dostanou zadarmo.
   - Plamen série a konfety jdou udělat i v Rive se stavy *šedý → zapálení → hoří* a vstupem `reducedMotion`. Duolingo dělá odměny právě v Rive.
@@ -323,9 +345,10 @@ Haptika a zvuk patří na vrchol pohybu, nejpozději 50 ms po něm. Dřív než 
 2. **Pátek v liště dnů** je ve Figmě i ve stavu 3/3 čárkovaný kruh. Měl by tam být plamen, stejně jako na konci animace.
 3. **Série za lekci, nebo za celý den?**
    - Duolingo sérii oddělilo od denního cíle a prodlouží ji už jedna lekce. Retence po 14 dnech díky tomu stoupla o 3,3 %.
-   - Kdybyste šli stejnou cestou, zapálení plamene se přesune do kroku 1 a 3/3 si nechá kroužek a konfety. Animace jsou z bloků, takže to jde bez předělávky.
+   - Kdybyste šli stejnou cestou, karta série a zapálení plamene se přesunou ke kroku 1 a 3/3 si nechá kroužek. Animace jsou z bloků, takže to jde bez předělávky.
 4. **Tykání** ve stavu 3/3: „Pecka, máš hotovo!“ tyká, zbytek karty vyká. Prototyp přebírá text z Figmy beze změny.
 5. **Vzácná varianta.** Na milnících série (7, 30, 100 dní) může mít 3/3 jinou oslavu. V nastavení by šly oslavy vypnout, jako v Asaně.
+6. **Má dýchat i Procvičování?** Po 3/3 je to jediný aktivní prvek. Navrhuji, aby nedýchalo, protože den je hotový. Kdybyste chtěli víc tlačit do procvičování, stačí dech zapnout i pro něj.
 
 ## Z rešerše
 

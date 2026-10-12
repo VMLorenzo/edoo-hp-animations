@@ -75,9 +75,6 @@ svg{display:block;flex:none}
 .vars button small{font-size:11.5px;line-height:15px;color:var(--stage-dim)}
 .vars button:hover{border-color:rgba(255,255,255,.32)}
 .vars button[aria-pressed="true"]{border-color:var(--secondary);background:rgba(101,174,57,.12)}
-.analysis h4{font:700 14px/20px var(--f-head);margin:14px 0 6px}
-.analysis h4:first-child{margin-top:0}
-.analysis .notes{margin-top:8px}
 table.cmp td.cur,table.cmp th.cur{background:rgba(101,174,57,.12);color:var(--stage-ink)}
 table.cmp th{white-space:nowrap}
 table.cmp tr.sum td{font-size:11.5px;color:var(--stage-dim)}
@@ -218,6 +215,14 @@ details.card[open]>summary{margin-bottom:10px}
 .puff{position:absolute;left:0;top:0;border-radius:50%;pointer-events:none;opacity:0}
 .nshadow{left:18px;top:76px;width:60px;height:16px;border-radius:50%;background:#000;opacity:0;pointer-events:none} /* plochý stín, jako pod plamenem na kartě série */
 .node.is-active .halo{opacity:1}
+/* Klidový stav: svatozář aktivního kroku pomalu dýchá a zve ke klepnutí. Každých 2,6 s se rozšíří na 107 %
+   a zesílí (druhý prstenec se prolne), pak se vrátí a chvíli stojí. Sinus, žádné blikání ani vlny.
+   Nedýchá během oslavy (.playing), Procvičování po 3/3 (.bonus) ani při omezeném pohybu. */
+.halo::after{content:"";position:absolute;inset:0;border-radius:50%;box-shadow:inset 0 0 0 3.36px rgba(255,214,53,.4);opacity:0}
+.phone.breath:not(.playing):not(.reduce) .node.is-active:not(.bonus) .halo{animation:halo-breath 2600ms infinite}
+.phone.breath:not(.playing):not(.reduce) .node.is-active:not(.bonus) .halo::after{animation:halo-glow 2600ms infinite}
+@keyframes halo-breath{0%{transform:scale(1);animation-timing-function:cubic-bezier(.37,0,.63,1)}35%{transform:scale(1.07);animation-timing-function:cubic-bezier(.37,0,.63,1)}75%,100%{transform:scale(1)}}
+@keyframes halo-glow{0%{opacity:0;animation-timing-function:cubic-bezier(.37,0,.63,1)}35%{opacity:1;animation-timing-function:cubic-bezier(.37,0,.63,1)}75%,100%{opacity:0}}
 .node.is-active .core{background:var(--primary);box-shadow:none;color:var(--on)}
 .node.is-done .core{background:var(--secondary);box-shadow:none;color:#fff}
 
@@ -226,7 +231,9 @@ details.card[open]>summary{margin-bottom:10px}
 .inline.on{opacity:1;visibility:visible}
 .inline p{flex:1;font:400 12px/16px var(--f-body);text-decoration:underline;text-underline-position:from-font}
 .inline .l{flex:1;display:flex;gap:8px;align-items:center}
-.tabbar{left:25px;top:827px;width:350px;height:56px;padding:0 2px;display:flex;align-items:center;justify-content:center;border-radius:296px;background:var(--lowest);box-shadow:var(--sh-bar)}
+.tabbar{left:25px;top:827px;width:350px;height:56px;padding:0 2px;display:flex;align-items:center;justify-content:center}
+/* podklad je podle Figmy větší než řada tabů (358 × 64, posunutý o −4 / −3,53 px), takže vybraný tab má kolem sebe bílý lem */
+.tabbar::before{content:"";position:absolute;left:-4px;top:-3.53px;width:358px;height:64px;border-radius:296px;background:var(--lowest);box-shadow:var(--sh-bar)}
 .tab{position:relative;isolation:isolate;flex:none;width:92.5px;height:56px;margin-right:-8px;padding:6px 8px 7px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5px;color:var(--on-var);font:500 11px/14px var(--f-body);text-align:center}
 .tab:last-child{margin-right:0}
 .tab.is-active{color:var(--on)}
@@ -290,7 +297,7 @@ details.card[open]>summary{margin-bottom:10px}
 <main class="stage">
   <div class="left">
     <div class="fit" id="fit">
-      <div class="phone" id="phone" aria-label="Náhled HP">
+      <div class="phone breath" id="phone" aria-label="Náhled HP">
         <div class="scr" id="hp">
           <div class="sb"><div class="sb-time">9:41</div><div class="sb-gap"></div>
             <div class="sb-lv"><svg width="19.2" height="12.226"><use href="#i-cell"/></svg><svg width="17.142" height="12.328"><use href="#i-wifi"/></svg><svg width="27.328" height="13"><use href="#i-battery"/></svg></div></div>
@@ -426,14 +433,10 @@ details.card[open]>summary{margin-bottom:10px}
         <label class="tgl"><input type="checkbox" id="optDots" checked>Tečky (pomalé ukládání)</label>
         
         <label class="tgl"><input type="checkbox" id="optSound">Zvuk</label>
+        <label class="tgl"><input type="checkbox" id="optBreath" checked>Dýchání aktivního kroku</label>
         <label class="tgl"><input type="checkbox" id="optReduce">Omezit pohyb</label>
       </div>
     </div>
-
-    <details class="card" open>
-      <summary>Jak na to, aby to bylo chytlavé, ale ne „moc“</summary>
-      <div id="analysis" class="analysis"></div>
-    </details>
 
     <div class="card">
       <h3>Porovnání variant</h3>
@@ -477,22 +480,22 @@ details.card[open]>summary{margin-bottom:10px}
       <summary>Karta série (po splnění denní cesty)</summary>
       <p class="sub">Figma „Streak“. Nejdřív příčina, pak odměna: HP dokončí cestu (kroužek 3/3, „Pecka, máš hotovo!“) a teprve potom zdola vyjede karta série přes ztmavenou HP. Sérii u nás prodlužuje splnění celého dne, ne samotný test, proto karta patří až za 3/3. Je zároveň vrcholem i závěrem dne.</p>
       <ol class="beats">
-        <li><span class="t">HP</span><span>Uzel testu zezelená, cesta se dokreslí, kroužek se uzavře na 3/3 a změní se text na „Pecka, máš hotovo!“. Lehká haptika. Série v hlavičce zůstává šedá 12.</span></li>
+        <li><span class="t">HP</span><span>Zelená cesta doteče k testu a uzel se otočí jako mince, kroužek se uzavře na 3/3 a změní se text na „Pecka, máš hotovo!“. Lehká haptika. Série v hlavičce zůstává šedá 12.</span></li>
         <li><span class="t">+450</span><span>Pauza, aby „hotovo“ dosedlo. Pak zdola vyjede karta (420 ms) a HP ztmavne. <span class="why">List přes HP: uživatel zůstává „doma“ a ví, že se vrátí tam, kde byl.</span></span></li>
         <li><span class="t">+250</span><span>Na kartě se šedý plamen zapálí (B: smáčknutí 116 × 82 % a protažení, C: plné poměry podle Duolinga). Na vrcholu „2“ spadne shora na „3“ a vyjedou oranžové paprsky. <b>Haptika „úspěch“</b>, jediná za den.</span></li>
         <li><span class="t">+400</span><span>Pátek se připojí do kapsle týdne: kapsle přestřelí o třetinu dne a vrátí se a žeton dopadne z 150 %. C: světlo přeběhne celou kapslí.</span></li>
         <li><span class="t">+500</span><span>Jako poslední vyjede tlačítko <b>„Pokračovat“</b>. <span class="why">„Jdeme na to!“ zní po splnění dne jako začátek. Tlačítko má říct, co se stane.</span></span></li>
-        <li><span class="t">klepnutí</span><span>Karta sjede dolů (320 ms) a plamen z ní obloukem odletí do počítadla v hlavičce, kde se zmenší na velikost ikony (560 ms). Tam dopadne a série se přetočí na 13. Pak tiše naskočí pátek v liště a nabídne se Procvičování. <span class="why">Odměna přistane tam, kde ji uživatel zítra bude hledat.</span></span></li>
+        <li><span class="t">klepnutí</span><span>Karta sjede dolů (320 ms) a plamen z ní obloukem odletí do počítadla v hlavičce, kde se zmenší na velikost ikony (560 ms). Tam dopadne a série se přetočí na 13. Pak tiše naskočí pátek v liště a Procvičování vyskočí ze země, otočí se a žuchne. <span class="why">Odměna přistane tam, kde ji uživatel zítra bude hledat.</span></span></li>
       </ol>
       <ul class="notes" style="margin-top:12px">
         <li><b>Porovnání:</b> přepínač „Karta série“ nahoře nabízí i původní pořadí (série hned po „Výborně!“, před HP) a vypnutí.</li>
-        <li><b>Haptika v kroku 3 (B):</b> lehká na „Výborně!“, lehká při uzavření kroužku, „úspěch“ na kartě série.</li>
+        <li><b>Haptika v kroku 3 (B):</b> lehká na „Výborně!“, lehká při uzavření kroužku, „úspěch“ na kartě série a střední při žuchnutí Procvičování.</li>
         <li><b>K Figmě:</b> dny jsou anglicky (Mo, Tu…), HP česky. Pro 13 je správně „dní v řadě“, prototyp skloňuje. Na HP je pondělí zmeškané, na kartě splněné.</li>
       </ul>
     </details>
 
     <details class="card" open>
-      <summary>Pravidla, která drží všechny čtyři animace</summary>
+      <summary>Pravidla, která drží všechny tři kroky</summary>
       <ul class="notes" id="rules"></ul>
     </details>
 
@@ -535,8 +538,8 @@ function spring(z,k){
    (androidx ExpressiveMotionTokens). Navíc jedna „hrdinská“ jen pro vrchol dne. */
 const S={
   fast:spring(.6,800),   // M3 Expressive · fast spatial — pop dalšího uzlu, poskok, odznak
-  def:spring(.8,380),    // M3 Expressive · default spatial — dosednutí splněného uzlu
-  hero:spring(.5,420),   // vlastní, jen 3/3 — pumpnutí kroužku, plamen série
+  def:spring(.8,380),    // M3 Expressive · default spatial — dosednutí splněného uzlu, mince, žuchnutí
+  hero:spring(.5,420),   // vlastní, jen 3/3 — pumpnutí kroužku
 };
 // čas největšího přestřelení pružiny = okamžik pro haptiku
 const peak=s=>Math.round(Math.PI/(Math.sqrt(s.k)*Math.sqrt(1-s.z*s.z))*1000);
@@ -600,7 +603,7 @@ const SUCC=[ // popis pod „Výborně!“ podle kroku (vykání, fakta)
 const N=[];
 NODES.forEach((d,i)=>{
   const el=document.createElement('div');
-  el.className='node';el.style.left=d.x+'px';el.style.top=d.y+'px';
+  el.className='node'+(i===3?' bonus':'');el.style.left=d.x+'px';el.style.top=d.y+'px'; // Procvičování (bonus) po 3/3 nedýchá
   el.innerHTML=`<span class="nshadow"></span><div class="hop"><div class="bob"><span class="halo"></span><span class="core"><span class="fill"></span><span class="ico">${ICONS[i]}</span></span></div></div><span class="ripple"></span>`;
   $('#nodes').appendChild(el);
   N.push({el,hop:el.querySelector('.hop'),bob:el.querySelector('.bob'),halo:el.querySelector('.halo'),core:el.querySelector('.core'),fill:el.querySelector('.fill'),ico:el.querySelector('.ico'),rip:el.querySelector('.ripple'),shadow:el.querySelector('.nshadow'),...d});
@@ -682,18 +685,19 @@ const ev=(c,t,type,v,label)=>c.events.push({t:t+(c.off||0),type,v,label});
    amplitudou, počtem ohnisek, částicemi a počtem haptických impulzů. */
 const VAR={
   A:{key:'A',name:'Klidná',sub:'Jen změna stavu. Bez přestřelení, částic a putování odměn.',
-     press:1,pop:1,iconAmp:null,rays:0,ringRays:0,diamonds:0,confetti:0,wave:0,march:0,pulses:0,pulses3:0,numPop:0,
+     press:1,pop:1,iconAmp:null,rays:0,ringRays:0,diamonds:0,confetti:0,wave:0,march:0,numPop:0,
      trail:0,flame:'fade',day:'fade',ringPump:1,ringStroke:0,wiggle:0,nextBreath:0},
   B:{key:'B',name:'Vyvážená',sub:'Jedno ohnisko na krok, jemné přestřelení, záblesk jen u uzavření dne.',
-     press:.93,pop:1.03,swap:1,iconAmp:[.92,1.06],rays:0,ringRays:1,diamonds:0,confetti:0,wave:0,march:0,pulses:1,pulses3:0,numPop:1.08,
+     press:.93,pop:1.03,swap:1,iconAmp:[.92,1.06],rays:0,ringRays:1,diamonds:0,confetti:0,wave:0,march:0,numPop:1.08,
      trail:0,flame:'soft',day:'pop',ringPump:1.06,ringStroke:1,wiggle:0,nextBreath:1.035},
   C:{key:'C',name:'Výrazná',sub:'Plná show: záblesky, konfety, vlna, plamínek k sérii. Jen na milníky série.',
-     press:.88,pop:1.06,iconAmp:[.82,1.14],rays:1,ringRays:3,diamonds:1,confetti:8,wave:1,march:1,pulses:2,pulses3:1,numPop:1.16,
+     press:.88,pop:1.06,iconAmp:[.82,1.14],rays:1,ringRays:3,diamonds:1,confetti:8,wave:1,march:1,numPop:1.16,
      trail:1,flame:'full',day:'flip',ringPump:1.1,ringStroke:1,wiggle:1,nextBreath:1.07},
 };
 let P=VAR.B;
 let NODEMODE='coin';
 const COIN=()=>NODEMODE==='coin';
+const coinOn=()=>COIN()&&P.key!=='A'&&!reduce; // uzel se opravdu otočí (A a omezený pohyb jen prolínají)
 /* Odkud k uzlu přijíždí cesta: z konce cesty (posledních 10 px) se spočítá směr.
    Vodorovný příjezd → otočení kolem svislé osy, svislý → kolem vodorovné. Hrana na straně
    příjezdu „ucukne“ dozadu, mince se překlopí ve směru, kterým cesta jela. */
@@ -749,8 +753,8 @@ function nodeDone(c,i,t0,{rayN=8,from=null}={}){
   if(P.rays)rays(c,n.x,n.y,t0+230,{n:rayN,r0:47,len:12,rot:i*11,label:`záblesk (${rayN} paprsků)`});
   return t0+(P.swap?125:250); // B: haptika a první tón na dopad (přepnutí), druhý tón na vrchol výskoku
 }
-/* Aktivace dalšího uzlu: (nádech nahoru), žlutá výplň, svatozář vyroste z uzlu, (pozvání). */
-function nodeNext(c,i,t0,{pulses=P.pulses,quiet=false}={}){
+/* Aktivace dalšího uzlu: (nádech nahoru), žlutá výplň, svatozář vyroste z uzlu. Pak svatozář dýchá (CSS, klidový stav). */
+function nodeNext(c,i,t0,{quiet=false}={}){
   const n=N[i],R=reduce,row='Další uzel';
   n.fill.style.background=C.y;
   // tichá aktivace (prolnutí) oko nepřitahuje, proto se nepočítá jako zastávka
@@ -767,10 +771,6 @@ function nodeNext(c,i,t0,{pulses=P.pulses,quiet=false}={}){
   A(c,row,'',n.ico,{color:C.out},[[150,{color:C.on},E.lin]],t0+100,{hide:1});
   // průhlednost se při přestřelení ořízne na 1, přestřeluje jen velikost
   A(c,row,'svatozář vyroste z uzlu',n.halo,{opacity:0,transform:'scale(.84)'},[[S.fast.d,{opacity:1,transform:'scale(1)'},S.fast.e]],t0+200);
-  if(pulses){
-    n.rip.style.borderColor='rgba(255,214,53,.85)';
-    A(c,row,'pozvání ×'+pulses,n.rip,{transform:'scale(1)',opacity:0},[[1,{transform:'scale(1)',opacity:.6},E.lin],[1100,{transform:'scale(1.34)',opacity:0},E.dec]],t0+800,{iter:pulses});
-  }
   return t0+130;
 }
 /* Odkrytí Procvičování — hravá verze: šedý uzel se zatřese (něco se dere ven), zamáčkne se do země,
@@ -779,7 +779,7 @@ function nodeNext(c,i,t0,{pulses=P.pulses,quiet=false}={}){
    a obrazovka se krátce otřese. Plochý stín na zemi ukazuje výšku. Vrací okamžik dopadu. */
 function nodeEmerge(c,i,t0){
   const n=N[i],row='Další uzel';
-  if(reduce||P.key==='A')return nodeNext(c,i,t0,{pulses:0,quiet:true});
+  if(reduce||P.key==='A')return nodeNext(c,i,t0,{quiet:true});
   focus(c,t0,row,n.x,n.y);
   const big=P.key==='C',H=big?44:34,UP=big?1.24:1.18,SH=big?5:3;
   const tq=180,sq=100,up=220,dn=220,imp=t0+tq+sq+up+dn,tEnd=imp+160+S.def.d;
@@ -1015,13 +1015,15 @@ function grammar(c,t0){
   return pk;
 }
 
-/* ═══════════════════════ čtyři sekvence ═══════════════════════
+/* ═══════════════════════ tři sekvence ═══════════════════════
    Hlavní údery (haptika a zvuk) leží na mřížce 250 ms, tedy na osminách při 120 BPM. */
 const SEQ={
 1:{title:'Krok 1 · Lekce',
   sub:{A:'Uzel lekce zezelená, kroužek a text se tiše aktualizují a další uzel zežloutne. Žádné přestřelení ani částice.',
-       B:'Uzel se jemně zmáčkne a vyskočí (93 % → 103 %) a zezelená. Pak se štafeta předá dalšímu uzlu. Jedno ohnisko, dvě zastávky oka po cestě.',
-       C:'Plná verze: hlubší zmáčknutí a výskok, záblesk z paprsků, čárky tečou k dalšímu kroku, dvě pozvání.'},
+       B:()=>coinOn()?'Uzel se otočí jako mince (žlutý líc → zelený rub) a dopadne. Štafeta se předá dalšímu uzlu, až k němu dojede žlutá cesta. Jedno ohnisko, dvě zastávky oka po cestě.'
+         :'Uzel se jemně zmáčkne a vyskočí (93 % → 103 %) a zezelená. Pak se štafeta předá dalšímu uzlu. Jedno ohnisko, dvě zastávky oka po cestě.',
+       C:()=>coinOn()?'Plná verze: výraznější otočení mince, záblesk z paprsků, čárky tečou k dalšímu kroku.'
+         :'Plná verze: hlubší zmáčknutí a výskok, záblesk z paprsků, čárky tečou k dalšímu kroku.'},
   build(c){
     const coin=COIN();
     const pk=nodeDone(c,0,0,{rayN:6});
@@ -1036,21 +1038,36 @@ const SEQ={
   beats:{
     A:[[0,'Uzel lekce zezelená od středu (260 ms) a ikona zbělá. Lehká haptika ve 250 ms.',''],
        [300,'Kroužek dne doroste na 1/3, číslo se přetočí, cesta se nalije žlutou.',''],
-       [500,'Uzel Slova zežloutne a objeví se svatozář. Pak je klid.','Žádné pozvání: klidná varianta nic neopakuje.']],
-    B:[[0,'Uzel se zmáčkne na 93 %.',''],
+       [500,'Uzel Slova zežloutne a objeví se svatozář.',''],
+       [860,'Svatozář začne pomalu dýchat.','Zve ke klepnutí, ale nekřičí: pomalý sinus, žádné blikání ani vlny. Dech je klidový stav HP, ne oslava, proto ho mají všechny varianty.']],
+    B:()=>coinOn()?[
+       [0,'Svatozář se vsákne, uzel se začne otáčet jako mince kolem svislé osy a přiblíží se na 107 %. K lekci žádná cesta nevede, proto se otočí výchozím směrem.',''],
+       [170,'Uzel je bokem a v jednom snímku se žlutý líc vymění za zelený rub. Hrana krátce ztmavne.','Stav se mění naráz, bez prolínání, jako v Duolingu.'],
+       [375,'Mince dopadne (95 %) a pružně dosedne. Lehká haptika a znělka.','Odměnou je samotná změna stavu, žádné částice.'],
+       [425,'Kroužek doroste na 1/3, číslo se přetočí a lehce ťukne (108 %), od uzlu se nalije žlutá cesta.',''],
+       [905,'Jak žlutá dojede, uzel Slova se lehce nadechne (103,5 %), zežloutne a svatozář z něj vyroste.','Cesta je spoušť: další krok se rozsvítí, až k němu dojede.'],
+       [1465,'Svatozář dosedne a začne pomalu dýchat: každých 2,6 s se rozšíří na 107 % a zesílí, pak se vrátí. Dýchá, dokud uživatel na krok neklepne.','Zve ke klepnutí, ale nekřičí: pomalý sinus, žádné blikání ani vlny. Dech je klidový stav HP, ne oslava, proto ho mají všechny varianty.']]:[
+       [0,'Uzel se zmáčkne na 93 %.',''],
        [125,'Na dně zmáčknutí uzel v jednom snímku zezelená. Přijde lehká haptika a první tón znělky.','Stav se mění naráz, bez prolínání, jako v Duolingu.'],
        [250,'Uzel vyskočí na 103 % a zazní druhý, hlasitější tón. Ikona dobíhá o 40 ms. Žádné částice.','Jemné přestřelení je pocit „klapnutí“, ne skok. Odměnou je samotná změna stavu.'],
        [300,'Kroužek doroste na 1/3, číslo se přetočí a lehce ťukne (108 %), cesta se nalije žlutou.',''],
        [620,'Uzel Slova se lehce nadechne (103,5 %), zežloutne a svatozář z něj vyroste.','Oko jde po cestě: z uzlu na sousední uzel.'],
-       [1420,'Jedno pozvání vlnkou, pak klid.','']],
-    C:[[0,'Svatozář se vsákne, uzel se zmáčkne na 88 %, vyskočí na 106 % a ikona dobíhá (82 → 114 %).','Hodnoty změřené na uzlu Duolinga.'],
+       [1180,'Svatozář dosedne a začne pomalu dýchat: každých 2,6 s se rozšíří na 107 % a zesílí, pak se vrátí. Dýchá, dokud uživatel na krok neklepne.','Zve ke klepnutí, ale nekřičí: pomalý sinus, žádné blikání ani vlny. Dech je klidový stav HP, ne oslava, proto ho mají všechny varianty.']],
+    C:()=>coinOn()?[
+       [0,'Svatozář se vsákne, uzel se otáčí jako mince a přiblíží se na 110 %. Ve 170 ms se v jednom snímku vymění žlutý líc za zelený rub.',''],
+       [360,'Záblesk ze 6 paprsků a v 375 ms dopad (93 %), haptika a znělka.',''],
+       [425,'Kroužek, číslo (ťukne na 116 %) a žlutá cesta, čárky tečou k cíli.',''],
+       [905,'Jak žlutá dojede, uzel Slova se nadechne na 107 % a v 1035 ms přijde haptika selection.',''],
+       [1465,'Svatozář začne pomalu dýchat, stejně jako v ostatních variantách.','']]:[
+       [0,'Svatozář se vsákne, uzel se zmáčkne na 88 %, vyskočí na 106 % a ikona dobíhá (82 → 114 %).','Hodnoty změřené na uzlu Duolinga.'],
        [250,'Haptika, tón a záblesk ze 6 paprsků.',''],
        [300,'Kroužek, číslo (ťukne na 116 %) a žlutá cesta, čárky tečou k cíli.',''],
        [620,'Uzel Slova se nadechne na 107 % a ve 750 ms přijde haptika selection.',''],
-       [1420,'Dvě pozvání vlnkou, pak klid.','']]}},
+       [1180,'Svatozář začne pomalu dýchat, stejně jako v ostatních variantách.','']]}},
 2:{title:'Krok 2 · Slova z lekce',
   sub:{A:'Stejné jako krok 1. Navíc tiše vyjede zpráva o nové gramatické kartě a objeví se odznak.',
-       B:'Stejná kostra jako krok 1, aby se pohyb naučil. Jediný přídavek je skutečná odměna: nová gramatická karta a odznak na tabu.',
+       B:()=>coinOn()?'Stejná kostra jako krok 1, aby se pohyb naučil: nejdřív k uzlu doteče zelená cesta, pak se mince otočí od strany, odkud cesta přijela. Jediný přídavek je skutečná odměna: nová gramatická karta a odznak na tabu.'
+         :'Stejná kostra jako krok 1, aby se pohyb naučil. Jediný přídavek je skutečná odměna: nová gramatická karta a odznak na tabu.',
        C:'Plná verze: záblesk a 3 kosočtverečky, tekoucí čárky, zhoupnutí ikony Gramatiky.'},
   build(c){
     const coin=COIN();let pk;
@@ -1071,19 +1088,33 @@ const SEQ={
   beats:{
     A:[[0,'Uzel Slova zezelená, cesta za ním zezelená a cesta dál zežloutne, kroužek 2/3, další uzel zežloutne.',''],
        [1000,'Zespodu vyjede zpráva o nové gramatické kartě a objeví se odznak 1.','']],
-    B:[[0,'Uzel Slova se zmáčkne, ve 125 ms zezelená v jednom snímku a vyskočí, stejně jako lekce. Znělka o kvartu výš.','Opakovaný vzor se naučí rychleji než pokaždé jiný efekt.'],
+    B:()=>coinOn()?[
+       [0,'Zelená plná čára doteče od Lekce ke Slovům (375 ms) a ke konci zrychlí, aby do mince „ťukla“.','Cesta a mince jsou jeden pohyb: čára doteče a mince se překlopí ve směru, kterým jela.'],
+       [375,`Mince se otočí od strany příjezdu (${arrivalDir('A').side}): hrana na straně příjezdu ucukne dozadu a mince se posune o 3 px ve směru jízdy. Ve 545 ms se vymění líc za zelený rub.`,''],
+       [750,'Dopad a dosednutí jako u lekce. Lehká haptika, znělka o kvartu výš.','Opakovaný vzor se naučí rychleji než pokaždé jiný efekt.'],
+       [800,'Kroužek doroste na 2/3 a text se změní na „Skoro hotovo!“ (efekt blízkého cíle). Od 900 ms se od Slov nalije žlutá k testu.','Zelená doteče k hotovému kroku, žlutá z něj vyrazí dál: hotový řetěz a cesta vpřed.'],
+       [1360,'Jak žlutá dojede, uzel Denní test se nadechne a dostane svatozář, která od 1920 ms pomalu dýchá.',''],
+       [1500,'Vyjede zpráva „Přibyla nová gramatická karta“ a v 1750 ms pípne odznak 1.','Jediný přídavek oproti kroku 1 je skutečná odměna, ne dekorace.']]:[
+       [0,'Uzel Slova se zmáčkne, ve 125 ms zezelená v jednom snímku a vyskočí, stejně jako lekce. Znělka o kvartu výš.','Opakovaný vzor se naučí rychleji než pokaždé jiný efekt.'],
        [250,'Cesta od Lekce zezelená až ke Slovům (300 ms) a od 400 ms se od Slov nalije žlutá k testu.','Zelená doteče k hotovému kroku, žlutá z něj vyrazí dál: hotový řetěz a cesta vpřed.'],
        [300,'Kroužek 2/3 a text „Skoro hotovo!“ (efekt blízkého cíle).',''],
-       [620,'Uzel Denní test se nadechne a dostane svatozář.',''],
+       [620,'Uzel Denní test se nadechne a dostane svatozář, která od 1180 ms pomalu dýchá.',''],
        [1000,'Vyjede zpráva „Přibyla nová gramatická karta“ a ve 1250 ms pípne odznak 1.','Jediný přídavek oproti kroku 1 je skutečná odměna, ne dekorace.']],
-    C:[[0,'Kostra jako v kroku 1.',''],
+    C:()=>coinOn()?[
+       [0,'Zelená plná čára doteče od Lekce ke Slovům a ke konci zrychlí.',''],
+       [375,`Mince se otočí od strany příjezdu (${arrivalDir('A').side}), posune se o 5 px a přiblíží na 110 %.`,''],
+       [735,'Záblesk z 8 paprsků a 3 kosočtverečky pomalu odplují. V 750 ms dopad, haptika a znělka.',''],
+       [800,'Kroužek 2/3. Od 900 ms se od Slov nalije žlutá k testu a čárky tečou k cíli.',''],
+       [1360,'Uzel testu se nadechne na 107 %, v 1490 ms haptika selection. Od 1920 ms svatozář dýchá.',''],
+       [1500,'Zpráva o kartě, v 1750 ms odznak a zhoupnutí ikony Gramatiky.','']]:[
+       [0,'Kostra jako v kroku 1.',''],
        [250,'Záblesk z 8 paprsků a 3 kosočtverečky pomalu odplují. Cesta od Lekce zezelená až ke Slovům.',''],
        [400,'Od Slov se nalije žlutá k testu a čárky tečou k cíli.',''],
        [1000,'Zpráva o kartě, ve 1250 ms odznak a zhoupnutí ikony Gramatiky.','']]}},
 3:{title:'Krok 3 · Denní test (3/3, den hotový)',
   sub:{A:'Den je hotový: kroužek se uzavře a zezelená a plamen v hlavičce se rozsvítí. Všechno jen prolnutím.',
-       B:'Vrchol dne ve třech zastávkách oka: uzel, kroužek (jeden záblesk a pumpnutí), plamen série (krátké smáčknutí). Bez konfet a bez putování odměn. Pátek v liště se změní tiše.',
-       C:'Plná show: vítězná vlna, uzavření kroužku se 3 záblesky a 8 konfetami, plamínek doletí k sérii, plamen se zapálí podle Duolinga, pátek se překlopí.'},
+       B:'Vrchol dne: uzel, kroužek (jeden záblesk a pumpnutí) a plamen série (krátké smáčknutí). Bez konfet a bez putování odměn. Pátek v liště se změní tiše a nakonec se hravě odkryje Procvičování.',
+       C:'Plná show: vítězná vlna, uzavření kroužku se 3 záblesky a 8 konfetami, plamínek doletí k sérii, plamen se zapálí podle Duolinga, pátek se překlopí a Procvičování žuchne výš a s víc prachem.'},
   build(c){
     if(c.phase==='before'){
       /* 1. část: HP dokončí cestu. Uzel testu → cesta → (vlna) → kroužek 3/3 → „Pecka, máš hotovo!“.
@@ -1204,36 +1235,57 @@ const SEQ={
     dayUpdate(c,P.key==='C'?top+200:top);
     nodeEmerge(c,3,P.key==='C'?top+650:top+350);
   },
-  subAfter:'Nejdřív příčina, pak odměna: HP dokončí cestu (uzel testu, cesta, kroužek 3/3, „Pecka, máš hotovo!“), pak zdola vyjede karta série přes ztmavenou HP. Po „Pokračovat“ z ní plamen odletí do počítadla v hlavičce. Časová osa ukazuje poslední přehranou část HP.',
-  beatsAfter:[[0,'HP: uzel testu se zmáčkne, zezelená a cesta se dokreslí.','Po návratu z testu je oko u uzlu.'],
-       [750,'Kroužek se uzavře na 3/3, zezelená a pumpne, text „Pecka, máš hotovo!“. Lehká haptika a akord.','Den je dokončený. To je příčina, série je následek.'],
-       [1200,'Pauza 450 ms, aby „hotovo“ dosedlo. Pak zdola vyjede karta série (420 ms) přes ztmavenou HP.',''],
-       [1870,'Na kartě se šedý plamen zapálí, 12 → 13, haptika „úspěch“. Pátek se připojí do kapsle týdne a vyjede „Pokračovat“.','Jediná haptika „úspěch“ za den. Karta je vrchol i závěr dne.'],
-       [0,'Po „Pokračovat“ karta sjede dolů a plamen odletí do počítadla v hlavičce. Tam dopadne, série 13, pak tiše naskočí pátek v liště.','Odměna přistane tam, kde ji uživatel bude zítra hledat.'],
-       [655,'Procvičování se zatřese (jako by se něco dralo ven), zamáčkne se do země, vystřelí o 34 px nahoru a ve vzduchu se jednou otočí zleva doprava jako mince: šedý líc, hrana, žlutý rub.','Z neaktivního se stává aktivní, a s chutí.'],
-       [1375,'Žuchnutí: rozplácne se na 126 × 70 %, odpruží, ze země do stran vyletí obláčky prachu a obrazovka se otřese o 3 px. Střední haptika a tupé „bum“. Pak svatozář.','Plochý prach a krátký otřes jednou denně jsou ještě „zábava“, ne křik.']],
+  subAfter:'Nejdřív příčina, pak odměna: HP dokončí cestu (uzel testu, cesta, kroužek 3/3, „Pecka, máš hotovo!“), pak zdola vyjede karta série přes ztmavenou HP. Po „Pokračovat“ z ní plamen odletí do počítadla v hlavičce a nakonec se odkryje Procvičování. Časová osa ukazuje poslední přehranou část HP.',
+  beatsAfter(){
+    const k=P.key,coin=coinOn(),o=COIN()?(k==='A'?375:500):0,close=(k==='C'?1000:750)+o;
+    const node=k==='A'?[0,COIN()?'HP: zelená čára doteče k testu a uzel testu zezelená (prolnutí).':'HP: uzel testu zezelená (prolnutí) a cesta se dokreslí.','']
+      :coin?[0,`HP: zelená čára doteče od Slov k testu (375 ms) a mince se otočí od strany příjezdu (${arrivalDir('B').side}). Dopad v 750 ms${k==='B'?', bez haptiky':' s lehkou haptikou'}.`,k==='B'?'Haptika přijde až s uzavřením dne. Dva silné impulzy krátce po sobě by splynuly.':'']
+      :[0,'HP: uzel testu se zmáčkne, zezelená a cesta se dokreslí.','Po návratu z testu je oko u uzlu.'];
+    const ring=k==='A'?'':k==='C'?`, pumpne na ${Math.round(P.ringPump*100)} %, 3 záblesky a 8 konfet`:`, pumpne na ${Math.round(P.ringPump*100)} % a jeden záblesk`;
+    const after=k==='A'?[
+       [0,'Plamen v hlavičce se prolne do oranžové a série se přetočí na 13.',''],
+       [300,'Pátek v liště se prolne na plamen.',''],
+       [655,'Procvičování zežloutne a objeví se svatozář (prolnutí).','Klidná varianta: bez výskoku a žuchnutí.']]:[
+       [0,'Plamen dosedne (122 × 78 %) a série se přetočí na 13.',''],
+       [300,k==='C'?'Pátek v liště se nadechne a překlopí na plamen.':'Pátek v liště tiše naskočí jako plamen.',k==='C'?'':'Lišta je mimo ohnisko, proto tiše.'],
+       [655,`Procvičování se zatřese (jako by se něco dralo ven), zamáčkne se do země, vystřelí o ${k==='C'?44:34} px nahoru a ve vzduchu se jednou otočí zleva doprava jako mince: šedý líc, hrana, žlutý rub.`,'Z neaktivního se stává aktivní, a s chutí.'],
+       [1375,`Žuchnutí: rozplácne se na 126 × 70 %, odpruží, ze země do stran vyletí ${k==='C'?10:8} obláčků prachu a obrazovka se otřese o ${k==='C'?5:3} px. Střední haptika a tupé „bum“. Pak svatozář.`,'Plochý prach a krátký otřes jednou denně jsou ještě „zábava“, ne křik.']];
+    return [node,
+       [close,`Kroužek se uzavře na 3/3, zezelená${ring}. Text „Pecka, máš hotovo!“, lehká haptika a akord.`,'Den je dokončený. To je příčina, série je následek.'],
+       ['karta','Pauza 450 ms, aby „hotovo“ dosedlo. Pak zdola vyjede karta série (420 ms) přes ztmavenou HP.',''],
+       ['karta','Na kartě se šedý plamen zapálí, 12 → 13, haptika „úspěch“. Pátek se připojí do kapsle týdne a jako poslední vyjede „Pokračovat“.','Jediná haptika „úspěch“ za den. Karta je vrchol i závěr dne.'],
+       ['klepnutí','Karta sjede dolů a plamen z ní obloukem odletí do počítadla v hlavičce. Další časy běží od jeho dopadu, ukazuje je časová osa nahoře.','Odměna přistane tam, kde ji uživatel bude zítra hledat.'],
+       ...after];
+  },
   subStreak:'Po testu přijde „Výborně!“ a obrazovka série. Plamen z ní odletí do počítadla v hlavičce a HP pak pokračuje odshora dolů: kroužek dne, uzel testu a cesta, lišta dnů, Procvičování.',
-  beatsStreak:[[0,'Plamen přiletěl z obrazovky série do počítadla: dosedne (122 × 78 %), rozsvítí se a série se přetočí na 13.','Kontinuita: odměna z předchozí obrazovky „přistane“ tam, kde ji uživatel bude hledat.'],
+  beatsStreak(){
+    const coin=COIN(),k=P.key;
+    return [[0,'Plamen přiletěl z obrazovky série do počítadla: dosedne (122 × 78 %), rozsvítí se a série se přetočí na 13.','Kontinuita: odměna z předchozí obrazovky „přistane“ tam, kde ji uživatel bude hledat.'],
        [350,'Kroužek dne zrychluje k uzavření a v 750 ms se uzavře, zezelená a pumpne. Lehká haptika, akord dne.','Haptika „úspěch“ už zazněla na obrazovce série, tady stačí lehká.'],
-       [1000,'Uzel testu se zmáčkne a zezelená a cesta ke Slovům se dokreslí.',''],
-       [1500,'Pátek v liště dnů tiše naskočí. Ve 1800 ms se nabídne Procvičování.','Oko jde odshora dolů, jak čte stránku.']],
+       [1000,coin&&k!=='A'?'Zelená čára doteče od Slov k testu a v 1375 ms se mince otočí od strany příjezdu. Dopad v 1750 ms.':'Uzel testu zezelená a cesta od Slov k testu se dokreslí.',''],
+       [coin?1900:1500,'Pátek v liště dnů tiše naskočí.','Oko jde odshora dolů, jak čte stránku.'],
+       [coin?2200:1800,k==='A'?'Procvičování zežloutne (prolnutí).':`Procvičování se zatřese, vyskočí, otočí se jako mince a v ${coin?2920:2520} ms žuchne: prach, otřes, střední haptika.`,'']];
+  },
   beats:{
     A:[[0,'Uzel testu zezelená, poslední úsek cesty zezelená.',''],
        [400,'Kroužek doroste a v 750 ms se uzavře a zezelená. Haptika „úspěch“.',''],
        [1050,'Plamen v hlavičce i pátek v liště se prolnou do oranžové, série 12 → 13.',''],
        [1350,'Procvičování zežloutne. Konec.','']],
-    B:[[0,'Uzel testu se zmáčkne, ve 125 ms zezelená v jednom snímku a vyskočí. Znělka V. Haptika tu není, přijde až s uzavřením dne.','Dva silné impulzy krátce po sobě by splynuly.'],
-       [400,'Kroužek dne zrychluje k uzavření.','Ukazatel nesmí těsně před cílem zpomalit.'],
-       [750,'Kroužek se uzavře: zezelená, tah zesílí na 6 px, pumpne na 106 % a vyskočí jeden záblesk. Haptika „úspěch“ a akord, který kadenci kroků rozřeší.','Hlavní vrchol. Jeden záblesk, ne ohňostroj.'],
-       [1120,'Plamen v hlavičce se krátce smáčkne a protáhne (112 %) a rozsvítí se, série naskočí na 13. Pátek v liště se ve stejnou chvíli tiše změní na plamen.','Odměny jdou po sobě, ale bez letu přes obrazovku. Lišta je mimo ohnisko, proto tiše.'],
-       [1600,'Procvičování se nabídne bez pozvání.','Den je hotový, nic dalšího nenaléhá.']],
-    C:[[0,'Uzel testu: plná kostra, záblesk.',''],
-       [420,'Vítězná vlna: uzly 1, 2 a 3 poskočí po 90 ms.',''],
-       [1000,'Uzavření kroužku: tah 7 px, pumpnutí 110 %, 3 záblesky po 120 ms a 8 konfet.',''],
-       [1250,'Plamínek doletí z kroužku k sérii (500 ms).','Odměna putuje jako drahokamy v Duolingu.'],
-       [1750,'Plamen podle Duolinga: smáčknutí 128 × 66 %, zbarvení, protažení 92 × 142 %, vznášení, dopad ve 2250 ms. Haptika medium.',''],
-       [2450,'Pátek v liště se nadechne a překlopí.',''],
-       [2900,'Procvičování se nabídne s jedním pozváním.','']]}},
+    B:()=>{const coin=coinOn(),o=coin?500:0;return [
+       coin?[0,`Zelená čára doteče od Slov k testu a v 375 ms se mince otočí od strany příjezdu (${arrivalDir('B').side}). Dopad v 750 ms se znělkou V, haptika tu není, přijde až s uzavřením dne.`,'Dva silné impulzy krátce po sobě by splynuly.']
+           :[0,'Uzel testu se zmáčkne, ve 125 ms zezelená v jednom snímku a vyskočí. Znělka V. Haptika tu není, přijde až s uzavřením dne.','Dva silné impulzy krátce po sobě by splynuly.'],
+       [400+o,'Kroužek dne zrychluje k uzavření.','Ukazatel nesmí těsně před cílem zpomalit.'],
+       [750+o,'Kroužek se uzavře: zezelená, tah zesílí na 6 px, pumpne na 106 % a vyskočí jeden záblesk. Haptika „úspěch“ a akord, který kadenci kroků rozřeší.','Hlavní vrchol. Jeden záblesk, ne ohňostroj.'],
+       [1120+o,'Plamen v hlavičce se krátce smáčkne a protáhne (112 %) a rozsvítí se, série naskočí na 13. Hned potom pátek v liště tiše naskočí jako plamen.','Odměny jdou po sobě, ale bez letu přes obrazovku. Lišta je mimo ohnisko, proto tiše.'],
+       [1600+o,`Procvičování se zatřese, vyskočí o 34 px, otočí se jako mince a v ${2320+o} ms žuchne: prach, otřes o 3 px, střední haptika.`,'Den je hotový, Procvičování se jen hravě odkryje.']];},
+    C:()=>{const coin=coinOn(),o=coin?500:0;return [
+       [0,coin?`Zelená čára doteče k testu a mince se otočí od strany příjezdu (${arrivalDir('B').side}), v 735 ms záblesk, v 750 ms dopad s haptikou.`:'Uzel testu: plná kostra, záblesk.',''],
+       [420+o,'Vítězná vlna: uzly 1, 2 a 3 poskočí po 90 ms.',''],
+       [1000+o,'Uzavření kroužku: tah 7 px, pumpnutí 110 %, 3 záblesky po 120 ms a 8 konfet.',''],
+       [1250+o,'Plamínek doletí z kroužku k sérii (500 ms).','Odměna putuje jako drahokamy v Duolingu.'],
+       [1750+o,`Plamen podle Duolinga: smáčknutí 128 × 66 %, zbarvení, protažení 92 × 142 %, vznášení, dopad ve ${2250+o} ms. Haptika medium.`,''],
+       [2450+o,'Pátek v liště se nadechne a překlopí.',''],
+       [2900+o,`Procvičování se zatřese, vyskočí o 44 px, otočí se jako mince a v ${3620+o} ms žuchne: víc prachu, otřes o 5 px, střední haptika.`,'']];}}},
 };
 
 /* ═══════════════════════ přehrávač ═══════════════════════ */
@@ -1288,7 +1340,7 @@ async function playStep(s,{fromAll=false}={}){
   stopRun();
   current=s;markStep(s);describe(s);
   const me={anims:[],cancelled:false};run=me;
-  render(s===3?2:s-1);
+  render(s===3?2:s-1);$('#phone').classList.add('playing'); // dech svatozáře stojí po celou oslavu
   if(s===3){$('#banner').classList.remove('on');$('#badge').classList.remove('on');}
   const mode=s===3&&showStreak?streakOrder:'off';
   // přechodová success obrazovka (a u „před HP“ hned obrazovka série)
@@ -1512,15 +1564,11 @@ async function playAll(){
 function markStep(s){document.querySelectorAll('.step').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.s===s)));}
 function describe(s){
   const st=s===3&&showStreak&&streakOrder==='before'&&showRet,sa=s===3&&showStreak&&streakOrder==='after';
-  $('#specT').textContent=`${SEQ[s].title} · varianta ${P.key} ${P.name}`;$('#specS').textContent=sa?SEQ[3].subAfter:st?SEQ[3].subStreak:SEQ[s].sub[P.key];
+  const val=v=>typeof v==='function'?v():v; // texty se mohou lišit podle režimu uzlu (mince × zmáčknutí)
+  $('#specT').textContent=`${SEQ[s].title} · varianta ${P.key} ${P.name}`;$('#specS').textContent=sa?SEQ[3].subAfter:st?SEQ[3].subStreak:val(SEQ[s].sub[P.key]);
   drawCompare(s);
-  let bt=(sa?SEQ[3].beatsAfter:st?SEQ[3].beatsStreak:SEQ[s].beats[P.key]);
-  if(COIN()&&P.key!=='A'&&!reduce){
-    const note=s===1?[0,'Otočení mince: k uzlu žádná cesta nevede, mince se otočí hned a výchozím směrem. Dopad ve 375 ms, zbytek kroku se posune o 125 ms.','']
-      :[0,`Otočení mince: nejdřív zelená cesta doteče k uzlu ${arrivalDir(s===2?'A':'B').side} (375 ms, zrychluje, aby „ťukla“). Mince se otočí od strany příjezdu a dopadne v 750 ms. Následující časy jsou o 500 ms později.`,'Cesta i mince jsou jeden pohyb: čára doteče, mince se překlopí ve směru, kterým jela.'];
-    bt=[note,...bt];
-  }
-  $('#beats').innerHTML=bt.map(([t,a,w])=>`<li><span class="t">${t} ms</span><span>${a}${w?` <span class="why">${w}</span>`:''}</span></li>`).join('');
+  const bt=sa?SEQ[3].beatsAfter():st?SEQ[3].beatsStreak():val(SEQ[s].beats[P.key]);
+  $('#beats').innerHTML=bt.map(([t,a,w])=>`<li><span class="t">${typeof t==='number'?t+' ms':t}</span><span>${a}${w?` <span class="why">${w}</span>`:''}</span></li>`).join('');
 }
 const ROWS=['Uzel 1','Uzel 2','Uzel 3','Uzel 4','Cesta','Vlna','Kroužek dne','Text','Další uzel','Otřes','Gramatika','Série','Částice'];
 function drawTimeline(c){
@@ -1587,33 +1635,39 @@ function sfx(name){
 $('#rules').innerHTML=[
   '<b>Oslava se přehraje až na HP.</b> Po splnění se uloží příznak „čeká oslava“. HP se po návratu vykreslí ve stavu před splněním, počká na dosednutí přechodu a dalších 300 ms a animaci přehraje jednou. Když uzel není vidět, HP k němu nejdřív odroluje. Když uživatel už scrolluje nebo je splnění staré, ukáže se rovnou koncový stav.',
   '<b>Gradace 1 &lt; 2 &lt; 3.</b> Kroky 1 a 2 ukazují cestu dál, 3/3 je jediný velký moment dne. Procvičování nejde dokončit, po 3/3 se jen hravě odkryje. Podle pravidla vrcholu a konce si člověk pamatuje hlavně vrchol a závěr.',
-  '<b>Odměny chodí po jedné.</b> Nejdřív se uzavře kroužek dne, pak plamínek doletí k sérii a ta se změní až po jeho dopadu. Uživatel tak vidí, odkud odměna přišla.',
+  '<b>Odměny chodí po jedné.</b> Nejdřív se uzavře kroužek dne, pak přijde karta série a plamen z ní doletí do počítadla v hlavičce. Série se změní až po jeho dopadu, takže uživatel vidí, odkud odměna přišla.',
   '<b>Nečekat na server.</b> Stav se zapíše lokálně a animace jede hned, synchronizace běží na pozadí. Duolingo tím snížilo vnímané čekání na konci lekce o víc než 60 %.',
-  '<b>Pohyb vede k dalšímu kroku.</b> Žlutá cesta „teče“ k dalšímu uzlu a končí na něm. Svatozář pozve dvakrát a pak je klid, žádné nekonečné blikání.',
-  '<b>Jedna kostra pro všechny kroky, změřená na uzlu Duolinga.</b> Svatozář se za 90 ms vsákne do uzlu, uzel se zmáčkne na 88 % a vyskočí na 106 %. Ikona dobíhá o 40 ms později a na vrcholu vyrazí záblesk. Uživatel se kostru naučí, a díky tomu je gradace čitelná.',
+  '<b>Pohyb vede k dalšímu kroku.</b> Zelená cesta doteče k hotovému uzlu, žlutá „teče“ k dalšímu a ten se rozsvítí, až k němu dojede.',
+  '<b>Aktivní krok dýchá.</b> Svatozář kolem žlutého uzlu je tu proto, aby přitáhla oko, a v klidovém stavu proto pomalu dýchá: každých 2,6 s se za 0,9 s rozšíří na 107 % a zesílí (druhý prstenec se prolne do 40 %), za 1 s se vrátí a 0,65 s stojí. Pohybuje se jen velikost a průhlednost, nic nebliká. Nedýchá během oslavy, Procvičování po 3/3 (den je hotový, nic nenaléhá) ani při omezeném pohybu. Když HP není vidět nebo je aplikace na pozadí, dech se zastaví.',
+  '<b>Jedna kostra pro všechny kroky.</b> Splněný uzel se pokaždé změní stejně: otočí se jako mince ze strany, odkud k němu přijela cesta, a v jednom snímku se vymění žlutá za zelenou. Alternativa „Zmáčknutí“ je změřená na uzlu Duolinga (svatozář se vsákne, 88 → 106 % v C, 93 → 103 % v B). Uživatel se kostru naučí, a díky tomu je gradace čitelná.',
   '<b>Rytmus a jedna tónina.</b> Haptika a zvuky leží na mřížce 125/250 ms (šestnáctiny a osminy při 120 BPM). Znělka kroku je stoupající velká tercie po 125 ms jako „správně“ v Duolingu. Kroky 1–3 hrají kadenci I – IV – V a uzavření dne ji rozřeší na I, takže je postup dne slyšet i bez dívání.',
   '<b>Pružiny jen pro polohu a velikost, barva a průhlednost nepřestřelují.</b> Pravidlo Material 3 Expressive (spatial × effects). Tokeny jsou přímo z M3, jen vrchol dne má vlastní „hero“.',
   '<b>Haptika je interpunkce:</b> nejvýš 2–3 impulzy na krok a vždy na vrcholu pohybu, nejpozději 50 ms po něm (dřív než 15 ms před ním se nesmí). Zvuk jde se stejným okamžikem.',
   '<b>Nikdy neblokovat.</b> Klepnutí kamkoli animaci dokončí do koncového stavu a HP jde ovládat po celou dobu.',
   '<b>Omezený pohyb</b> (iOS Reduce Motion, Android „Odstranit animace“): stejné stavy, jen prolnutí 240 ms. Bez poskoků, pružin a částic, haptika zůstává.',
-  '<b>Flat a v barvách HP.</b> Jiskry jsou plochý tah (paprsky a kosočtverečky), ne lesk. Konfety jsou jen jednou denně u 3/3, žluté a zelené s plátky citronu, a vylétají z kroužku, ne přes celou obrazovku.',
+  '<b>Flat a v barvách HP.</b> Jiskry jsou plochý tah (paprsky a kosočtverečky), ne lesk. Konfety jsou jen ve variantě C, jednou denně u 3/3, žluté a zelené s plátky citronu, a vylétají z kroužku, ne přes celou obrazovku.',
 ].map(x=>`<li>${x}</li>`).join('');
 $('#tokens').innerHTML='<tr><th>Token</th><th>Hodnota</th><th>Kde</th></tr>'+[
-  ['fast','M3 Expressive · fast spatial','pop dalšího uzlu, poskok ve vlně, odznak, plamen pátku',S.fast],
-  ['default','M3 Expressive · default spatial','dosednutí splněného uzlu, zhoupnutí ikony',S.def],
-  ['hero','vlastní, jen 3/3','pumpnutí kroužku, plamen v hlavičce',S.hero],
+  ['fast','M3 Expressive · fast spatial','pop dalšího uzlu, svatozář, poskok ve vlně, odznak, plamen pátku',S.fast],
+  ['default','M3 Expressive · default spatial','dosednutí mince a splněného uzlu, odpružení Procvičování po žuchnutí, dosednutí plamene v hlavičce',S.def],
+  ['hero','vlastní, jen 3/3','pumpnutí kroužku',S.hero],
 ].map(([n,src,w,s])=>`<tr><td><code>${n}</code><br><span style="color:var(--stage-dim)">${src}</span></td><td>tlumení ${String(s.z).replace('.',',')} · tuhost ${s.k}<br><span style="color:var(--stage-dim)">SwiftUI <code>.spring(response: ${s.resp}, dampingFraction: ${s.z})</code><br>Compose <code>spring(${s.z}f, ${s.k}f)</code><br>vrchol ${peak(s)} ms · dozvuk ≈ ${s.d} ms</span></td><td>${w}</td></tr>`).join('')+[
   ['decelerate','cubic-bezier(.05,.7,.1,1)','příchody, výplně uzlu, zpráva o kartě'],
   ['accelerate','cubic-bezier(.3,0,.8,.15)','odchody, nádech uzlu, dojezd kroužku do 3/3'],
   ['standard','cubic-bezier(.2,0,0,1)','kroužek 1/3 a 2/3, přetočení čísel'],
-  ['draw','cubic-bezier(.65,0,.35,1)','nalití cesty'],
+  ['draw','cubic-bezier(.65,0,.35,1)','nalití cesty, druhá půlka otočení mince, otočení Procvičování'],
+  ['arrive','cubic-bezier(.45,0,.9,.6)','zelená cesta dojíždí k minci, ke konci zrychlí a „ťukne“'],
+  ['breath','cubic-bezier(.37,0,.63,1) · cyklus 2600 ms','dech svatozáře aktivního kroku: 0–35 % ven na 107 %, 35–75 % zpět, 75–100 % stojí'],
 ].map(([n,v,w])=>`<tr><td><code>${n}</code></td><td><code>${v}</code></td><td>${w}</td></tr>`).join('');
 $('#questions').innerHTML=[
   '<b>Série 12 → 13.</b> Ve Figmě zůstává ve stavu 3/3 číslo 12 a mění se jen barva. Navrhuji, aby po splnění dne číslo naskočilo, jako v Duolingu. Pokud 12 už dnešek započítává, zůstane jen zapálení plamene.',
   '<b>Pátek v liště dnů.</b> Ve Figmě má i stav 3/3 pátek jako čárkovaný kruh. V animaci se mění na plamen a stejně by to mělo být ve statickém stavu 3/3.',
   '<b>Tykání ve stavu 3/3.</b> „Pecka, máš hotovo!“ tyká, zbytek karty vyká. Prototyp přebírá text z Figmy beze změny.',
   '<b>Zpráva o gramatické kartě</b> ve stavu 3/3 ve Figmě není. Prototyp ji při návratu z testu bere jako zavřenou.',
-  '<b>Série za lekci, nebo za celý den?</b> Ve Figmě se plamen zapálí až při 3/3. Duolingo sérii od denního cíle oddělilo: prodlouží ji už jedna lekce a retence po 14 dnech stoupla o 3,3 %. Kdybyste šli stejnou cestou, zapálení plamene se přesune do kroku 1 a 3/3 si nechá kroužek a konfety. Animace jsou z bloků, takže to jde bez předělávky.',
+  '<b>Série za lekci, nebo za celý den?</b> Ve Figmě se plamen zapálí až při 3/3. Duolingo sérii od denního cíle oddělilo: prodlouží ji už jedna lekce a retence po 14 dnech stoupla o 3,3 %. Kdybyste šli stejnou cestou, karta série a zapálení plamene se přesunou ke kroku 1 a 3/3 si nechá kroužek. Animace jsou z bloků, takže to jde bez předělávky.',
+  '<b>Plná čára ve Figmě.</b> Prošlá cesta je v prototypu plná zelená čára. Statické stavy 2/3 a 3/3 ve Figmě ji zatím mají čárkovanou.',
+  '<b>Má dýchat i Procvičování?</b> Po 3/3 je Procvičování jediný aktivní prvek. Navrhuji, aby nedýchalo: den je hotový a nic by nemělo naléhat. Kdybyste chtěli víc tlačit do procvičování, stačí dech zapnout i pro něj.',
+  '<b>Tlačítko na kartě série.</b> Ve Figmě je „Jdeme na to!“, prototyp má „Pokračovat“, protože po splnění dne nic dalšího nezačíná.',
   '<b>Vzácná varianta (návrh na později).</b> Na milnících série (7, 30, 100 dní) může mít 3/3 jinou oslavu, podobně jako u příležitostných oslav v Asaně. V nastavení by šly oslavy vypnout.',
 ].map(x=>`<li>${x}</li>`).join('');
 
@@ -1636,8 +1690,7 @@ $('#research').innerHTML=[
 
 /* ═══════════════════════ porovnání variant ═══════════════════════ */
 function metrics(c){
-  const inv=t=>/^pozvání/.test(t.label||'');
-  const main=c.tracks.filter(t=>!inv(t));
+  const main=c.tracks;
   const end=Math.round(Math.max(...main.map(t=>t.t0+t.T)));
   const objs=new Set(main.filter(t=>t.kind!=='fx').map(t=>t.row));
   let mx=0;
@@ -1678,7 +1731,7 @@ const fmtS=ms=>(ms/1000).toLocaleString('cs-CZ',{minimumFractionDigits:1,maximum
 function drawCompare(s){
   if(!MET)return;
   const rowsDef=[
-    ['Délka (bez pozvání)',m=>fmtS(m.end)],
+    ['Délka',m=>fmtS(m.end)],
     ['Zastávky oka',m=>m.focus],
     ['Dráha oka',m=>m.path+' px'],
     ['Pohyblivé části',m=>m.objs],
@@ -1692,8 +1745,6 @@ function drawCompare(s){
   rowsDef.forEach(([lbl,fn])=>{h+=`<tr><td>${lbl}</td>${['A','B','C'].map(k=>`<td class="${k===P.key?'cur':''}">${fn(MET[k][s])}</td>`).join('')}</tr>`;});
   h+=`<tr class="sum"><td>Den 1–3 celkem</td>${['A','B','C'].map(k=>{const d=day(k);return `<td class="${k===P.key?'cur':''}">${fmtS(d.end)} · ${d.hapt} haptik · ${d.parts} částic</td>`;}).join('')}</tr>`;
   $('#compare').innerHTML=h;
-  const c3=MET.C[3],b3=MET.B[3];
-  $('#diag').innerHTML=`Ve variantě C pošle krok 3 oko na <b>${c3.focus} míst</b> s dráhou <b>${c3.path} px</b>, rozpohybuje <b>${c3.objs} částí</b> HP a vypustí <b>${c3.parts} částic</b> během ${fmtS(c3.end)}. Ve variantě B je to ${b3.focus} místa, ${b3.path} px, ${b3.objs} částí a ${b3.parts} částic za ${fmtS(b3.end)}.`;
 }
 function setVariant(k){
   P=VAR[k];
@@ -1704,36 +1755,6 @@ function setVariant(k){
   const c=ctx();if(current===3&&showStreak&&streakOrder==='after')c.phase='before';else c.afterStreak=current===3&&showRet&&showStreak&&streakOrder==='before';SEQ[current].build(c);drawTimeline(c);c.temp.forEach(p=>p.remove());render(preState(current));
   if(current===3){$('#banner').classList.remove('on');$('#badge').classList.remove('on');}
 }
-$('#analysis').innerHTML=`
-  <h4>Proč C působí jako „moc“</h4>
-  <p class="sub" id="diag"></p>
-  <ul class="notes">
-    <li><b>Problém není síla pohybu, ale počet míst.</b> Duolingo dává každý beat (série, kalendář, odměna) na vlastní obrazovku, kde oko stojí na jednom místě. Na HP se stejné množství rozprskne po celé ploše a oko přeskakuje mezi uzlem, kroužkem, hlavičkou a lištou dnů.</li>
-    <li><b>Koření na každém kroku.</b> Záblesky, kosočtverečky, tekoucí čárky a pozvání jsou každé zvlášť drobnost. Dohromady ale tvoří vrstvu dekorace, která se opakuje každý den.</li>
-    <li><b>Amplitudy pro jednorázový moment.</b> Plamen na 142 %, číslo na 116 %: na milník série správně, na každodenní rituál moc.</li>
-    <li><b>Frekvence.</b> Kroky 1–3 uživatel uvidí třikrát denně, stovkykrát za rok. Co nadchne poprvé, po týdnu otravuje (NN/g). Strava proto stáhla točící se kudos.</li>
-  </ul>
-  <h4>Jak dávkovat, aby to bylo chytlavé a ne „moc“</h4>
-  <ol class="notes">
-    <li><b>Jedno ohnisko na krok.</b> Krok má jednoho hrdinu, ostatní změny jen tiše dosednou. Material 3 na to má dvě sady pohybu: standard pro opakované interakce, expressive pro hrdinské momenty.</li>
-    <li><b>Oko po cestě.</b> Ohniska blízko sebe a ve směru čtení. Vzdálené změny (lišta dnů) tiše, ne ve stejném okamžiku jako hlavní moment.</li>
-    <li><b>Odměnou je změna stavu.</b> Zelená, číslo a plamen jsou samy odměnou. Částice jsou koření: nejvýš jedno na krok a ne na každém kroku.</li>
-    <li><b>Amplituda podle četnosti.</b> Denně přestřelení 3–6 % a deformace do 15 %. Na milníku klidně 40 %. Apple: odskok nad 0,4 působí u UI přehnaně.</li>
-    <li><b>Rozpočet času.</b> Opakovaný krok kolem 1 s, uzavření dne do 2 s včetně dozvuku pružin. Delší jen u milníků.</li>
-    <li><b>Haptika 1–2 impulzy na krok,</b> „úspěch“ jen jednou denně.</li>
-    <li><b>Novost vyprchává.</b> Duolingo slaví nejvíc první dny série a na milnících, běžný den má jen „počítadlo +1“. Plnou show proto šetřit.</li>
-    <li><b>Test stého dne:</b> bude to bavit i po stém? (Apple navrhuje pro první i stý zážitek.)</li>
-  </ol>
-  <h4>Co na to Duolingo samo</h4>
-  <ul class="notes">
-    <li>Mezi pěti zásadami jejich motion týmu jsou dvě o střídmosti: <b>pohyb má odpovídat účelu</b>, žádné ozdoby samy pro sebe, a <b>jít rovnou k věci</b>, šetřit čas a nezahrabávat odměnu pod efekty (<a href="https://www.linkedin.com/posts/samiakhalaf_duolingocreator-duolingodesign-designstudio-activity-7486054269264203776-XugE" target="_blank" rel="noopener">Duolingo Design Studio</a>).</li>
-    <li><b>Stav se mění v jednom snímku.</b> Políčko zezelená naráz, jeden snímek po nejhlubším smáčknutí, bez prolínání. „Šťáva“ je kolem přepnutí, ne v něm. Varianta B to tak dělá.</li>
-    <li><b>Konfety jsou řídké:</b> 3–8 kusů, dva tvary, dvě barvy a do 0,6 s pryč. I milník v C má proto jen 8 konfet.</li>
-    <li><b>Počítadlo přetočí jen změněnou číslici.</b> Nová spadne shora za 70–80 ms a krátce podklesne.</li>
-  </ul>
-  <h4>Doporučení</h4>
-  <p class="sub"><b>B jako výchozí</b> každý den. <b>C jen na milnících série</b> (první den, 7., 30., 100.) a při prvním splnění dne po instalaci. Plná show tak zůstane vzácná a bude mít váhu. <b>A</b> se hodí pro nastavení „Méně animací“ a pro případ, kdy je splnění staré (aplikace byla zavřená) a oslava by přišla pozdě.</p>`;
-
 /* ovládání */
 $('#vars').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setVariant(b.dataset.v);});
 $('#pathMode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;PATHMODE=b.dataset.v;
@@ -1756,8 +1777,9 @@ $('#streakMode').addEventListener('click',e=>{const b=e.target.closest('button')
   if(run)stopRun();measureAll();setVariant(P.key);});
 $('#optRet').addEventListener('change',()=>{if(run)stopRun();measureAll();setVariant(P.key);});
 $('#optSound').onchange=e=>{sound=e.target.checked;if(sound&&!ac)ac=new (window.AudioContext||window.webkitAudioContext)();};
-$('#optReduce').checked=reduce;
-$('#optReduce').onchange=e=>{reduce=e.target.checked;playStep(current);};
+$('#optReduce').checked=reduce;$('#phone').classList.toggle('reduce',reduce);
+$('#optReduce').onchange=e=>{reduce=e.target.checked;$('#phone').classList.toggle('reduce',reduce);playStep(current);};
+$('#optBreath').onchange=e=>$('#phone').classList.toggle('breath',e.target.checked);
 $('#phone').addEventListener('click',skip);
 
 /* přizpůsobení velikosti telefonu oknu */
